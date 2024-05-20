@@ -1,0 +1,48 @@
+[package]
+name = "graphql-query"
+version = "1.0.0"
+authors = ["Stellate <engineering@stellate.co>"]
+repository = "https://github.com/StellateHQ/graphql-query"
+keywords = ["GraphQL", "Lexer", "Parser", "Execution language"]
+license = "MIT"
+edition = "2021"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = ["json"]
+json = ["serde_json", "serde"]
+
+[dependencies]
+hashbrown = { version = "0.14.0", features = ["allocator-api2"] }
+serde_json = { version = "^1.0.0", optional = true }
+bumpalo = { version = "3.9", features = ["collections", "boxed", "serde", "allocator-api2"] }
+serde = { version = "^1.0.0", optional = true, features = ["derive"] }
+logos = { version = "0.12.0", features = ["std"] }
+lexical-core = { version = "0.8.3", features = [
+    "std",
+    "format",
+    "power-of-two",
+    "safe",
+] }
+
+[dev-dependencies]
+apollo-parser = "^0.7.0"
+async-graphql-parser = "^7.0.3"
+graphql-parser = "^0.4.0"
+serde = "^1.0.0"
+serde_json = "^1.0.0"
+indoc = "1.0.6"
+bencher = "0.1.5"
+
+[profile.release]
+lto = true
+panic = 'abort'
+
+[profile.bench]
+lto = true
+
+[[bench]]
+name = "parser"
+harness = false

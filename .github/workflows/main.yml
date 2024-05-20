@@ -1,0 +1,40 @@
+name: CI
+
+on: pull_request
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: 1.73.0
+          targets: wasm32-unknown-unknown
+
+      - name: Cargo cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ./target
+          key: v1-gql-query-rs-${{ runner.os }}-${{ hashFiles('./Cargo.lock') }}
+
+      - name: Check
+        run: cargo check
+
+      - name: Check WASM
+        run: cargo check --target wasm32-unknown-unknown
+
+      - name: Benchmarks
+        run: cargo bench
+
+      - name: Test (dev)
+        run: cargo test
+
+      - name: Test (release)
+        run: cargo test --release
