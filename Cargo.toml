@@ -4,7 +4,7 @@ version = "1.0.0"
 authors = ["Stellate <engineering@stellate.co>"]
 repository = "https://github.com/StellateHQ/graphql-query"
 description = "Stupendously fast and easy GraphQL Query Language handling."
-keywords = ["GraphQL", "Lexer", "Parser", "Execution language"]
+keywords = ["GraphQL", "Lexer", "Parser", "WASM"]
 license = "MIT"
 edition = "2021"
 
