@@ -1,3 +1,5 @@
+use bumpalo::collections::Vec;
+
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
 
@@ -5,10 +7,18 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-Fragment-spread-target-defined)
-#[derive(Default)]
 pub struct KnownFragmentNames<'a> {
-    fragment_names: Vec<&'a str>,
-    fragment_spreads: Vec<&'a str>,
+    fragment_names: Vec<'a, &'a str>,
+    fragment_spreads: Vec<'a, &'a str>,
+}
+
+impl<'a> DefaultIn<'a> for KnownFragmentNames<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            fragment_names: Vec::new_in(arena),
+            fragment_spreads: Vec::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for KnownFragmentNames<'a> {}

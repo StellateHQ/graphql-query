@@ -24,7 +24,7 @@
 //! As such, the [`DefaultRules`](rules::DefaultRules) rule is a [`ValidationRule`] itself that's
 //! composed using the [`ComposedVisitor`](crate::visit::ComposedVisitor) utility.
 //!
-//! All rules must implement the `Default` trait, which makes it easier to quickly run a validation
+//! All rules must implement the `DefaultIn` trait, which makes it easier to quickly run a validation
 //! rule and isolates them from external state, since no validation requires any external state.
 //!
 //! For example, this is one way to run a validation rule, in this case `DefaultRules`:

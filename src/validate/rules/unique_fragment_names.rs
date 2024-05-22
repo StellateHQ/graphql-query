@@ -1,3 +1,5 @@
+use bumpalo::collections::Vec;
+
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
 
@@ -6,9 +8,16 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-Fragment-Name-Uniqueness)
-#[derive(Default)]
 pub struct UniqueFragmentNames<'a> {
-    used_fragment_names: Vec<&'a str>,
+    used_fragment_names: Vec<'a, &'a str>,
+}
+
+impl<'a> DefaultIn<'a> for UniqueFragmentNames<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            used_fragment_names: Vec::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for UniqueFragmentNames<'a> {}

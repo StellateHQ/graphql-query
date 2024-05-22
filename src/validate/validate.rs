@@ -1,5 +1,5 @@
 use super::context::ValidationContext;
-use crate::ast::{ASTContext, Document};
+use crate::ast::{ASTContext, DefaultIn, Document};
 use crate::error::Result;
 use crate::visit::{ComposedVisitor, VisitNode, Visitor};
 use std::borrow::Borrow;
@@ -13,26 +13,27 @@ use std::borrow::Borrow;
 /// Rules implement the `Default` trait, which allows them to be instantiated easily.
 /// The intention of using `Default` is for rules to not carry any external
 /// state as for GraphQL validation no external state is needed.
-pub trait ValidationRule<'a>: Visitor<'a, ValidationContext<'a>> + Default {
+pub trait ValidationRule<'a>: Visitor<'a, ValidationContext<'a>> + DefaultIn<'a> {
     /// Run this `ValidationRule` against the given document and return a result which errors if
     /// the rule fails on the document.
     #[inline]
     fn validate(ctx: &'a ASTContext, document: &'a Document<'a>) -> Result<()> {
         let mut validation = ValidationContext::new(ctx);
-        let mut visitor = Self::default();
+        let mut visitor = Self::default_in(&ctx.arena);
         document.visit(&mut validation, &mut visitor);
         validation.to_result()
     }
 }
 
-impl<'a, A, B> Default for ComposedVisitor<'a, ValidationContext<'a>, A, B>
+impl<'a, A, B> DefaultIn<'a> for ComposedVisitor<'a, ValidationContext<'a>, A, B>
 where
     A: ValidationRule<'a>,
     B: ValidationRule<'a>,
 {
     #[inline]
-    fn default() -> Self {
-        ComposedVisitor::new(A::default(), B::default())
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        ComposedVisitor::new(A::default_in(arena), B::default_in(arena))
+        
     }
 }
 

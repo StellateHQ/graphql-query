@@ -1,31 +1,43 @@
-use hashbrown::HashMap;
+use bumpalo::{collections::Vec, Bump};
+use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
 
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 struct OperationEdge<'a> {
-    defined_vars: Vec<&'a str>,
-    used_fragments: Vec<&'a str>,
+    defined_vars: Vec<'a, &'a str>,
+    used_fragments: Vec<'a, &'a str>,
 }
 
-#[derive(Default, Clone)]
+#[derive(Clone)]
 struct FragmentEdge<'a> {
-    used_vars: Vec<&'a str>,
-    used_fragments: Vec<&'a str>,
+    used_vars: Vec<'a, &'a str>,
+    used_fragments: Vec<'a, &'a str>,
 }
 
 /// Validate that a document defines all the variables it uses per operation
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-All-Variable-Uses-Defined)
-#[derive(Default)]
 pub struct NoUndefinedVariables<'a> {
-    used_vars: Vec<&'a str>,
-    defined_vars: Vec<&'a str>,
-    used_fragments: Vec<&'a str>,
-    operation_edges: std::vec::Vec<OperationEdge<'a>>,
-    fragment_edges: HashMap<&'a str, FragmentEdge<'a>>,
+    used_vars: Vec<'a, &'a str>,
+    defined_vars: Vec<'a, &'a str>,
+    used_fragments: Vec<'a, &'a str>,
+    operation_edges: Vec<'a, OperationEdge<'a>>,
+    fragment_edges: HashMap<&'a str, FragmentEdge<'a>, DefaultHashBuilder, &'a Bump>,
+}
+
+impl<'a> DefaultIn<'a> for NoUndefinedVariables<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            used_vars: Vec::new_in(arena),
+            defined_vars: Vec::new_in(arena),
+            used_fragments: Vec::new_in(arena),
+            operation_edges: Vec::new_in(arena),
+            fragment_edges: HashMap::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for NoUndefinedVariables<'a> {}
@@ -112,7 +124,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoUndefinedVariables<'a> {
         _document: &'a Document<'a>,
         _info: &VisitInfo,
     ) -> VisitFlow {
-        let mut visited: Vec<&'a str> = Vec::default();
+        let mut visited: Vec<&'a str> = Vec::new_in(&ctx.arena);
         for operation_edge in self.operation_edges.iter() {
             if references_undefined_var(
                 &mut visited,
@@ -131,7 +143,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoUndefinedVariables<'a> {
 
 fn references_undefined_var<'a>(
     visited: &mut Vec<&'a str>,
-    fragment_edges: &HashMap<&'a str, FragmentEdge<'a>>,
+    fragment_edges: &HashMap<&'a str, FragmentEdge<'a>, DefaultHashBuilder, &'a Bump>,
     defined_vars: &Vec<&'a str>,
     used_fragments: &Vec<&'a str>,
 ) -> bool {

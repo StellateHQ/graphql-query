@@ -68,7 +68,7 @@ test graphql_ast_print_apollo_parser  ... bench:      20,861 ns/iter (+/- 518)
 
 ```
 test graphql_ast_fold                 ... bench:       8,466 ns/iter (+/- 768)
-test graphql_ast_validate             ... bench:       2,339 ns/iter (+/- 127)
+test graphql_ast_validate             ... bench:       1,504 ns/iter (+/- 46)
 test graphql_load_introspection       ... bench:      90,265 ns/iter (+/- 4,899)
 ```
 

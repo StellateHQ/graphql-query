@@ -1,3 +1,5 @@
+use bumpalo::collections::Vec;
+
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
 
@@ -5,9 +7,16 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-Argument-Uniqueness)
-#[derive(Default)]
 pub struct UniqueArgumentNames<'a> {
-    used_argument_names: Vec<&'a str>,
+    used_argument_names: Vec<'a, &'a str>,
+}
+
+impl<'a> DefaultIn<'a> for UniqueArgumentNames<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            used_argument_names: Vec::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for UniqueArgumentNames<'a> {}
