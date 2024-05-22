@@ -6,18 +6,10 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-Lone-Anonymous-Operation)
+#[derive(Default)]
 pub struct LoneAnonymousOperation {
     operations: usize,
     has_anonymous: bool,
-}
-
-impl<'a> DefaultIn<'a> for LoneAnonymousOperation {
-    fn default_in(_arena: &'a bumpalo::Bump) -> Self {
-        Self {
-            operations: 0,
-            has_anonymous: false
-        }
-    }
 }
 
 impl<'a> ValidationRule<'a> for LoneAnonymousOperation {}
