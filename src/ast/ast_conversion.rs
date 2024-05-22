@@ -62,6 +62,15 @@ pub trait DefaultIn<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self;
 }
 
+impl<'a, T> DefaultIn<'a> for T
+where
+    T: Default,
+{
+    fn default_in(_ctx: &'a bumpalo::Bump) -> Self {
+        Self::default()
+    }
+}
+
 impl<'a> DefaultIn<'a> for Document<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         Document {

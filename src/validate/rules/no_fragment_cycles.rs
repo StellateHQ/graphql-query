@@ -1,4 +1,5 @@
-use hashbrown::HashMap;
+use bumpalo::{collections::Vec, Bump};
+use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
 
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
@@ -7,10 +8,18 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/October2021/#sec-Fragment-spreads-must-not-form-cycles)
-#[derive(Default)]
 pub struct NoFragmentCycles<'a> {
-    fragment_edges: HashMap<&'a str, Vec<&'a str>>,
-    used_fragments: Vec<&'a str>,
+    fragment_edges: HashMap<&'a str, Vec<'a, &'a str>, DefaultHashBuilder, &'a Bump>,
+    used_fragments: Vec<'a, &'a str>,
+}
+
+impl<'a> DefaultIn<'a> for NoFragmentCycles<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            fragment_edges: HashMap::new_in(arena),
+            used_fragments: Vec::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for NoFragmentCycles<'a> {}
@@ -64,7 +73,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoFragmentCycles<'a> {
         _document: &'a Document<'a>,
         _info: &VisitInfo,
     ) -> VisitFlow {
-        let mut visited: Vec<&'a str> = Vec::default();
+        let mut visited: Vec<&'a str> = Vec::new_in(&ctx.arena);
         for (name, _) in self.fragment_edges.iter() {
             if contains_edge(&mut visited, name, name, &self.fragment_edges) {
                 ctx.add_error("Cannot spread fragments within themselves");
@@ -107,7 +116,7 @@ fn contains_edge<'a>(
     visited: &mut Vec<&'a str>,
     toplevel_name: &'a str,
     current_name: &'a str,
-    fragment_edges: &HashMap<&'a str, Vec<&'a str>>,
+    fragment_edges: &HashMap<&'a str, Vec<&'a str>, DefaultHashBuilder, &'a Bump>,
 ) -> bool {
     if visited.contains(&current_name) {
         true
