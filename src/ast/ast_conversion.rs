@@ -1,6 +1,6 @@
 // #![allow(clippy::needless_update)]
-use bumpalo::collections::{vec::IntoIter, Vec};
 use super::ast::*;
+use bumpalo::collections::{vec::IntoIter, Vec};
 
 // TODO: from_iter_in could be a good helper here as well
 
@@ -75,7 +75,7 @@ impl<'a> DefaultIn<'a> for Document<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         Document {
             definitions: Vec::new_in(&arena),
-            size_hint: 0
+            size_hint: 0,
         }
     }
 }

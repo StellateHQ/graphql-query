@@ -56,7 +56,12 @@ pub type DefaultRules<'a> = ComposedVisitor<
                 'a,
                 ValidationContext<'a>,
                 NoFragmentCycles<'a>,
-                ComposedVisitor<'a, ValidationContext<'a>, NoUndefinedVariables<'a>, NoUnusedVariables<'a>>
+                ComposedVisitor<
+                    'a,
+                    ValidationContext<'a>,
+                    NoUndefinedVariables<'a>,
+                    NoUnusedVariables<'a>,
+                >,
             >,
         >,
     >,

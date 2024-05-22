@@ -28,15 +28,24 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoUnusedVariables<'a> {
         &mut self,
         _ctx: &mut ValidationContext<'a>,
         operation: &'a OperationDefinition<'a>,
-        _info: &VisitInfo
+        _info: &VisitInfo,
     ) -> VisitFlow {
-        operation.variable_definitions.children.iter().for_each(|def| {
-            self.variables.push(def.variable.name);
-        });
+        operation
+            .variable_definitions
+            .children
+            .iter()
+            .for_each(|def| {
+                self.variables.push(def.variable.name);
+            });
         VisitFlow::Next
     }
 
-    fn enter_field(&mut self, _ctx: &mut ValidationContext<'a>, field: &'a Field<'a>, _info: &VisitInfo) -> VisitFlow {
+    fn enter_field(
+        &mut self,
+        _ctx: &mut ValidationContext<'a>,
+        field: &'a Field<'a>,
+        _info: &VisitInfo,
+    ) -> VisitFlow {
         field.arguments.children.iter().for_each(|arg| {
             if let Value::Variable(var) = arg.value {
                 self.used_variables.push(var.name);
@@ -49,7 +58,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoUnusedVariables<'a> {
         &mut self,
         ctx: &mut ValidationContext<'a>,
         _document: &'a Document<'a>,
-        _info: &VisitInfo
+        _info: &VisitInfo,
     ) -> VisitFlow {
         self.variables.iter().for_each(|defined_variable| {
             if !self.used_variables.contains(defined_variable) {
