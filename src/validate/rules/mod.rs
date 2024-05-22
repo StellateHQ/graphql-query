@@ -1,10 +1,14 @@
 use crate::visit::ComposedVisitor;
 
+// Missing schemaless rules
+// https://github.com/graphql/graphql-js/blob/main/src/validation/rules/DeferStreamDirectiveLabelRule.ts
+// https://github.com/graphql/graphql-js/blob/main/src/validation/rules/DeferStreamDirectiveOnValidOperationsRule.ts
 mod known_fragment_names;
 mod lone_anonymous_operation;
 mod no_fragment_cycles;
 mod no_undefined_variables;
 mod no_unused_fragments;
+mod no_unused_variables;
 mod unique_argument_names;
 mod unique_fragment_names;
 mod unique_operation_names;
@@ -16,6 +20,7 @@ pub use lone_anonymous_operation::*;
 pub use no_fragment_cycles::*;
 pub use no_undefined_variables::*;
 pub use no_unused_fragments::*;
+pub use no_unused_variables::*;
 pub use unique_argument_names::*;
 pub use unique_fragment_names::*;
 pub use unique_operation_names::*;
@@ -51,7 +56,7 @@ pub type DefaultRules<'a> = ComposedVisitor<
                 'a,
                 ValidationContext<'a>,
                 NoFragmentCycles<'a>,
-                NoUndefinedVariables<'a>,
+                ComposedVisitor<'a, ValidationContext<'a>, NoUndefinedVariables<'a>, NoUnusedVariables<'a>>
             >,
         >,
     >,
