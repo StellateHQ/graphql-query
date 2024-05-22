@@ -1,3 +1,5 @@
+use bumpalo::collections::Vec;
+
 use super::super::{ValidationContext, ValidationRule};
 use crate::{ast::*, visit::*};
 
@@ -5,10 +7,18 @@ use crate::{ast::*, visit::*};
 ///
 /// See [`ValidationRule`]
 /// [Reference](https://spec.graphql.org/draft/#sec-All-Variables-Used)
-#[derive(Default)]
 pub struct NoUnusedVariables<'a> {
-    variables: Vec<&'a str>,
-    used_variables: Vec<&'a str>,
+    variables: Vec<'a, &'a str>,
+    used_variables: Vec<'a, &'a str>,
+}
+
+impl<'a> DefaultIn<'a> for NoUnusedVariables<'a> {
+    fn default_in(arena: &'a bumpalo::Bump) -> Self {
+        Self {
+            variables: Vec::new_in(arena),
+            used_variables: Vec::new_in(arena),
+        }
+    }
 }
 
 impl<'a> ValidationRule<'a> for NoUnusedVariables<'a> {}
