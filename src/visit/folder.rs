@@ -1030,14 +1030,14 @@ mod tests {
             if selection_set.is_empty() {
                 return Ok(selection_set);
             }
-    
+
             let has_typename = selection_set.selections.iter().any(|selection| {
                 selection
                     .field()
                     .map(|field| field.name == "__typename" && field.alias.is_none())
                     .unwrap_or(false)
             });
-    
+
             if !has_typename {
                 let typename_field = Selection::Field(Field {
                     alias: None,
@@ -1046,13 +1046,16 @@ mod tests {
                     directives: Directives::default_in(&ctx.arena),
                     selection_set: SelectionSet::default_in(&ctx.arena),
                 });
-            
-              let new_selections = selection_set
-                .into_iter()
-                .chain(iter::once(typename_field))
-                .collect_in::<bumpalo::collections::Vec<Selection>>(&ctx.arena);
-    
-                Ok(SelectionSet { selections: new_selections })
+
+                let new_selections =
+                    selection_set
+                        .into_iter()
+                        .chain(iter::once(typename_field))
+                        .collect_in::<bumpalo::collections::Vec<Selection>>(&ctx.arena);
+
+                Ok(SelectionSet {
+                    selections: new_selections,
+                })
             } else {
                 Ok(selection_set)
             }
@@ -1066,8 +1069,7 @@ mod tests {
         let ast = Document::parse(&ctx, query).unwrap();
 
         let mut folder = AddTypenames {};
-        let new_ast = ast
-            .fold_operation(&ctx, None, &mut folder);
+        let new_ast = ast.fold_operation(&ctx, None, &mut folder);
         assert_eq!(
             new_ast.unwrap().print(),
             "{\n  todo {\n    id\n    author {\n      id\n      __typename\n    }\n    __typename\n  }\n  __typename\n}"

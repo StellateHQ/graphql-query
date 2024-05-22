@@ -33,7 +33,6 @@ where
     #[inline]
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         ComposedVisitor::new(A::default_in(arena), B::default_in(arena))
-        
     }
 }
 

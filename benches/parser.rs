@@ -41,19 +41,15 @@ fn graphql_ast_print_graphql_query_rs(bench: &mut Bencher) {
     bench.iter(|| ast.print());
 }
 
-
-
 fn graphql_ast_print_gql_parser(bench: &mut Bencher) {
     use graphql_parser::query::parse_query;
     let ast = parse_query::<&str>(QUERY).ok().unwrap();
-    bench.iter(|| {
-        ast.to_string()
-    });
+    bench.iter(|| ast.to_string());
 }
 
 fn graphql_ast_print_apollo_parser(bench: &mut Bencher) {
-    use apollo_parser::Parser;
     use apollo_parser::cst::CstNode;
+    use apollo_parser::Parser;
     let parser = Parser::new(QUERY);
     let cst = parser.parse();
     let doc = cst.document();

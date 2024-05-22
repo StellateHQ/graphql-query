@@ -287,7 +287,7 @@ mod tests {
                 name: "Int",
             }))),
             default_value: Value::Null,
-            directives: Directives::default_in(&ctx.arena)
+            directives: Directives::default_in(&ctx.arena),
         }];
 
         let var_defs = VariableDefinitions {
@@ -313,7 +313,7 @@ mod tests {
                 name: "orderByInput",
             })),
             default_value: Value::Null,
-            directives: Directives::default_in(&ctx.arena)
+            directives: Directives::default_in(&ctx.arena),
         }];
 
         let var_defs = VariableDefinitions {

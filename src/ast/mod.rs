@@ -37,7 +37,7 @@ mod parser;
 mod printer;
 
 pub use ast::*;
-pub use ast_kind::ASTKind;
 pub use ast_conversion::DefaultIn;
+pub use ast_kind::ASTKind;
 pub use parser::ParseNode;
 pub use printer::PrintNode;

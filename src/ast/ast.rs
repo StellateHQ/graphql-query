@@ -1,7 +1,7 @@
 pub use super::ast_conversion::*;
 use crate::error::{Error, ErrorType, Result};
 use bumpalo::collections::CollectIn;
-use hashbrown::{HashMap, hash_map::DefaultHashBuilder};
+use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
 
 /// A context for a GraphQL document which holds an arena allocator.
 ///
