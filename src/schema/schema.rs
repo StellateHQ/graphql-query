@@ -244,11 +244,6 @@ impl<'a> SchemaInterface<'a> {
         }
     }
 
-    /// Add a new [SchemaInterface] to the list that implements this [SchemaInterface]
-    pub fn add_possible_interface(&mut self, _ctx: &'a ASTContext, interface: &'a str) {
-        self.possible_interfaces.push(interface);
-    }
-
     /// Get list of possible [SchemaInterface]s that implement this [SchemaInterface]
     #[inline]
     pub fn get_possible_interfaces(&self) -> Vec<'a, &'a str> {

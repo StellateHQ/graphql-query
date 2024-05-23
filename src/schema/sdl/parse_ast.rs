@@ -22,6 +22,12 @@ pub(super) enum TypeDefinition<'a> {
     UnionTypeDefinition(SchemaUnionPlaceholder<'a>),
 }
 
+// https://github.com/graphql/graphql-spec/blob/main/spec/Section%203%20--%20Type%20System.md#directives
+// #[derive(Debug, Clone)]
+// pub(super) enum DirectiveDefinition<'a> {
+//     DirectiveDefinition(&'a str),
+// }
+
 impl<'a> TypeDefinition<'a> {
     pub(crate) fn name(&self) -> &'a str {
         match self {

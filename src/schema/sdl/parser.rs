@@ -1,8 +1,3 @@
-//! Note: The arena allocs in betwen are necessary and can be thought of as boxing, just on the arena:
-//! Normally, to have a finite enum size (as is required for recursive enums like `TypeWrapper`), you `Box`
-//! variants, which is a heap allocation. Here, we "box" by allocating on the arena. This is necessary because
-//! Box is not `Copy`, but in this crate `Copy` is a requirement to seamlessly work with the arena datastructures.
-
 use super::{
   error::{syntax, syntax_err, SchemaError}, finalizers::initialize_type_definition, parse_ast::*
 };
@@ -158,6 +153,8 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       loop {
           match ctx.peek() {
               Token::End => break,
+              // TODO: add support for extending types
+              // TODO: add support for directives
               Token::Name("schema") => {
                   if schema_def.is_none() {
                       schema_def = Some(SchemaDefinition::parse_from_ctx(ctx)?)
@@ -181,11 +178,15 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       for typ in type_defs.into_iter() {
           schema.types.insert(
               typ.name(),
-              initialize_type_definition(&ctx.ast_ctx, ctx.ast_ctx.alloc(typ))?,
+              initialize_type_definition(&ctx.ast_ctx, ctx.ast_ctx.alloc(typ)),
           );
       }
 
-      // find root types
+      for (name, typ) in schema.types.iter() {
+        // TODO: this pass will be used to validate the existence of all references
+      } 
+
+      // fill in the root types
       if let Some(query_type) = schema_def
           .map_or(Some("Query"), |def| def.query_root_type_name)
           .and_then(|name| schema.types.get(name))

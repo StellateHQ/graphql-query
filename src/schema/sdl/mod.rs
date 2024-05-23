@@ -1,6 +1,9 @@
-mod error;
 mod finalizers;
 mod lexer;
 mod parse_ast;
-mod parser;
+
+#[cfg(test)]
 mod tests;
+
+pub mod error;
+pub mod parser;
