@@ -1,5 +1,6 @@
-use crate::ast::{ASTContext, OperationKind};
+use crate::ast::{ASTContext, DefaultIn, OperationKind};
 use bumpalo::collections::Vec;
+use bumpalo::Bump;
 use hashbrown::hash_map::DefaultHashBuilder;
 use hashbrown::{HashMap, HashSet};
 
@@ -9,13 +10,24 @@ use hashbrown::{HashMap, HashSet};
 /// AST documents for validation and execution. In this library the schema is never executable and
 /// serves only for metadata and type information. It is hence a "Client Schema".
 /// [Reference](https://spec.graphql.org/October2021/#sec-Schema)
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Schema<'a> {
     pub(crate) query_type: Option<&'a SchemaObject<'a>>,
     pub(crate) mutation_type: Option<&'a SchemaObject<'a>>,
     pub(crate) subscription_type: Option<&'a SchemaObject<'a>>,
     pub(crate) types:
         hashbrown::HashMap<&'a str, &'a SchemaType<'a>, DefaultHashBuilder, &'a bumpalo::Bump>,
+}
+
+impl<'a> DefaultIn<'a> for Schema<'a> {
+    fn default_in(arena: &'a Bump) -> Self {
+        Schema {
+            query_type: None,
+            mutation_type: None,
+            subscription_type: None,
+            types: HashMap::new_in(&arena),
+        }
+    }
 }
 
 impl<'a> Schema<'a> {
@@ -103,7 +115,7 @@ pub trait SchemaInterfaces<'a>: Sized {
     fn add_interface(&mut self, ctx: &'a ASTContext, interface: &'a str);
 
     /// Get list of implemented [SchemaInterface]s
-    fn get_interfaces(&self) -> Vec<&'a str>;
+    fn get_interfaces(&self) -> Vec<'a, &'a str>;
 
     /// Checks whether given [ObjectType] is a possible subtype
     #[inline]

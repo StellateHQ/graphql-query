@@ -25,6 +25,7 @@ pub mod build_client_schema;
 pub mod introspection;
 #[allow(clippy::module_inception)]
 pub mod schema;
+mod sdl;
 mod schema_reference;
 
 pub use build_client_schema::BuildClientSchema;
