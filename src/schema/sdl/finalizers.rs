@@ -5,7 +5,7 @@ use super::parse_ast::*;
 use super::parser::ParseResult;
 use crate::ast::ASTContext;
 use crate::schema::{
-    SchemaField, SchemaInputField, SchemaInputObject, SchemaInterface, SchemaObject, SchemaType, SchemaUnion, TypeRef
+    SchemaField, SchemaFields, SchemaInputField, SchemaInputObject, SchemaInterface, SchemaInterfaces, SchemaObject, SchemaPossibleTypes, SchemaType, SchemaUnion, TypeRef
 };
 
 fn convert_to_schema_field<'a>(ctx: &'a ASTContext, name: &'a str, field: &'a SchemaFieldPlaceholder) -> ParseResult<SchemaField<'a>> {
@@ -108,14 +108,31 @@ pub(super) fn initialize_type_definition<'a>(
                 fields
             }))))
         }
-        // TODO: similar to object-type definition but for input types
         TypeDefinition::EnumTypeDefinition(e) => Ok(ctx.arena.alloc(SchemaType::Enum(e))),
         TypeDefinition::ScalarTypeDefinition(s) => Ok(ctx.arena.alloc(SchemaType::Scalar(s))),
-        TypeDefinition::InterfaceTypeDefinition(i) => Ok(ctx.arena.alloc(SchemaType::Interface(
-            ctx.arena.alloc(SchemaInterface::new(ctx, i.name)),
-        ))),
+
+        TypeDefinition::InterfaceTypeDefinition(i) => {
+            let mut schema_interface = SchemaInterface::new(ctx, i.name);
+            for field in i.fields.fields.iter() {
+                let schema_field = convert_to_schema_field(ctx, field.0, field.1)?;
+                schema_interface.add_field(ctx, schema_field);
+            }
+
+            for obj in i.interfaces.iter() {
+                // TODO: add possible_types
+                schema_interface.add_interface(ctx, *obj);
+            }
+
+            Ok(ctx.arena.alloc(SchemaType::Interface(
+                ctx.arena.alloc(schema_interface),
+            )))
+        },
         TypeDefinition::UnionTypeDefinition(u) => {
-          Ok(ctx.arena.alloc(SchemaType::Union(ctx.arena.alloc(SchemaUnion::new(ctx, u.name)))))
+            let mut schema_union = SchemaUnion::new(ctx, u.name);
+            for obj in u.types.iter() {
+                schema_union.add_possible_type(ctx, *obj);
+            }
+            Ok(ctx.arena.alloc(SchemaType::Union(ctx.arena.alloc(schema_union))))
         }
     }
 }

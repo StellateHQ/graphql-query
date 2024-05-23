@@ -33,7 +33,24 @@ where
 #[test]
 fn empty_schema() {
   let ctx = ASTContext::new();
-  assert_parse(&ctx, "", Schema::default_in(&ctx.arena));
+  let mut types = HashMap::new_in(&ctx.arena);
+  for scalar in DEFAULT_SCALARS.iter() {
+    types.insert(
+      *scalar,
+      ctx.alloc(crate::schema::SchemaType::Scalar(ctx.alloc(SchemaScalar { name: *scalar }))),
+    );
+  }
+
+  assert_parse(
+      &ctx,
+      "",
+      Schema {
+          query_type: None,
+          mutation_type: None,
+          subscription_type: None,
+          types,
+      },
+  );
 }
 
 #[test]
@@ -272,9 +289,6 @@ fn objects_implementing_interfaces() {
       }
   "};
 
-  let string = SchemaScalar::new("String");
-  let int = SchemaScalar::new("Int");
-
   let field_a_type = TypeRef::Type("String");
   let field_a = SchemaField::new(&ctx,"fieldA", &field_a_type);
   let field_b_type = TypeRef::Type("Int");
@@ -302,14 +316,17 @@ fn objects_implementing_interfaces() {
   let obj = SchemaType::Object(&obj);
   let interface1 = SchemaType::Interface(&interface1);
   let interface2 = SchemaType::Interface(&interface2);
-  let string = SchemaType::Scalar(&string);
-  let int = SchemaType::Scalar(&int);
   let mut types = HashMap::new_in(&ctx.arena);
   types.insert("MyType", &obj);
   types.insert("MyInt1", &interface1);
   types.insert("MyInt2", &interface2);
-  types.insert("String", &string);
-  types.insert("Int", &int);
+
+  for scalar in DEFAULT_SCALARS.iter() {
+    types.insert(
+      *scalar,
+      ctx.alloc(crate::schema::SchemaType::Scalar(ctx.alloc(SchemaScalar { name: *scalar }))),
+    );
+  }
 
   assert_parse(
       &ctx,
@@ -342,9 +359,6 @@ fn interfaces_implementing_interfaces() {
       }
   "};
 
-  let string = SchemaScalar::new("String");
-  let int = SchemaScalar::new("Int");
-
   let field_a_type = TypeRef::Type("String");
   let field_a = SchemaField::new(&ctx,"fieldA", &field_a_type);
   let field_b_type = TypeRef::Type("Int");
@@ -369,14 +383,17 @@ fn interfaces_implementing_interfaces() {
   let obj = SchemaType::Object(&obj);
   let interface1 = SchemaType::Interface(&interface1);
   let interface2 = SchemaType::Interface(&interface2);
-  let string = SchemaType::Scalar(&string);
-  let int = SchemaType::Scalar(&int);
   let mut types = HashMap::new_in(&ctx.arena);
   types.insert("MyType", &obj);
   types.insert("MyInt1", &interface1);
   types.insert("MyInt2", &interface2);
-  types.insert("String", &string);
-  types.insert("Int", &int);
+
+  for scalar in DEFAULT_SCALARS.iter() {
+    types.insert(
+      *scalar,
+      ctx.alloc(crate::schema::SchemaType::Scalar(ctx.alloc(SchemaScalar { name: *scalar }))),
+    );
+  }
 
   assert_parse(
       &ctx,
@@ -405,9 +422,6 @@ fn unions() {
       union MyUnion = MyTypeA | MyTypeB
   "};
 
-  let string = SchemaScalar::new("String");
-  let int = SchemaScalar::new("Int");
-
   let field_a_type = TypeRef::Type("String");
   let field_a = SchemaField::new(&ctx,"fieldA", &field_a_type);
   let field_b_type = TypeRef::Type("Int");
@@ -426,14 +440,17 @@ fn unions() {
   let obj_a = SchemaType::Object(&obj_a);
   let obj_b = SchemaType::Object(&obj_b);
   let union = SchemaType::Union(&union);
-  let string = SchemaType::Scalar(&string);
-  let int = SchemaType::Scalar(&int);
   let mut types = HashMap::new_in(&ctx.arena);
   types.insert("MyTypeA", &obj_a);
   types.insert("MyTypeB", &obj_b);
   types.insert("MyUnion", &union);
-  types.insert("String", &string);
-  types.insert("Int", &int);
+
+  for scalar in DEFAULT_SCALARS.iter() {
+    types.insert(
+      *scalar,
+      ctx.alloc(crate::schema::SchemaType::Scalar(ctx.alloc(SchemaScalar { name: *scalar }))),
+    );
+  }
 
   assert_parse(
       &ctx,
