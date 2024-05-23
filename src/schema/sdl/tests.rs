@@ -8,7 +8,7 @@ use super::{
 use crate::{
   ast::{ASTContext, DefaultIn},
   schema::{
-      build_client_schema, schema, BuildClientSchema, IntrospectionQuery, OutputType, Schema, SchemaEnum, SchemaField, SchemaFields, SchemaInterface, SchemaInterfaces, SchemaObject, SchemaPossibleTypes, SchemaScalar, SchemaType, SchemaUnion, TypeRef
+      BuildClientSchema, IntrospectionQuery, Schema, SchemaEnum, SchemaField, SchemaFields, SchemaInterface, SchemaInterfaces, SchemaObject, SchemaPossibleTypes, SchemaScalar, SchemaType, SchemaUnion, TypeRef
   },
 };
 use bumpalo::collections::Vec;
@@ -267,6 +267,7 @@ fn interface_type_definition() {
           name: "MyInterface",
           fields: FieldDefinitions { fields },
           interfaces: Vec::new_in(&ctx.arena),
+          possible_types: Vec::new_in(&ctx.arena),
       },
   );
 }

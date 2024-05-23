@@ -118,6 +118,10 @@ pub(super) fn initialize_type_definition<'a>(
                 schema_interface.add_interface(ctx, *obj);
             }
 
+            for obj in i.possible_types.iter() {
+                schema_interface.add_possible_type(ctx, *obj);
+            }
+
             ctx.arena.alloc(SchemaType::Interface(
                 ctx.arena.alloc(schema_interface),
             ))

@@ -149,11 +149,12 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
   fn parse_from_ctx(ctx: &mut private::ParserContext<'a>) -> ParseResult<Self> {
       let mut schema = Schema::default_in(&ctx.ast_ctx.arena);
       let mut schema_def = None;
-      let mut type_defs = Vec::new_in(&ctx.ast_ctx.arena);
+      let mut type_defs = HashMap::new_in(&ctx.ast_ctx.arena);
+      // TODO: store schema extensions here and merge after first loop
+      // let mut schema_extensions = HashMap::new_in(&ctx.ast_ctx.arena);
       loop {
           match ctx.peek() {
               Token::End => break,
-              // TODO: add support for extending types
               // TODO: add support for directives
               Token::Name("schema") => {
                   if schema_def.is_none() {
@@ -162,8 +163,33 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
                       return syntax_err!("Must not specify more than one Schema Definition.");
                   }
               }
-              _ => type_defs.push(TypeDefinition::parse_from_ctx(ctx)?),
+              _ => {
+                let type_def = TypeDefinition::parse_from_ctx(ctx)?;
+                // TODO: now expand the "InterfaceTypeDefinition(SchemaInterfacePlaceholder<'a>)"
+                // with possible_types, this will require another loop over type_defs.
+                type_defs.insert(type_def.name(), type_def);
+              },
           }
+      }
+
+      for (name, typ) in type_defs.clone().iter() {
+        match typ {
+            TypeDefinition::InterfaceTypeDefinition(i) => {
+                for interface in i.interfaces.iter() {
+                    if let Some(TypeDefinition::InterfaceTypeDefinition(implemented_interface)) = type_defs.get_mut(interface) {
+                        implemented_interface.add_possible_type(name);
+                    }
+                }
+            },
+            TypeDefinition::ObjectTypeDefinition(obj) => {
+                for interface in obj.interfaces.iter() {
+                    if let Some(TypeDefinition::InterfaceTypeDefinition(i)) = type_defs.get_mut(interface) {
+                        i.add_possible_type(name);
+                    }
+                }
+            }
+            _ => (),
+        }
       }
 
       for scalar in DEFAULT_SCALARS.iter() {
@@ -177,8 +203,8 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       // We need to create all type definitions first to avoid circular evaluation of types.
       for typ in type_defs.into_iter() {
           schema.types.insert(
-              typ.name(),
-              initialize_type_definition(&ctx.ast_ctx, ctx.ast_ctx.alloc(typ)),
+              typ.0,
+              initialize_type_definition(&ctx.ast_ctx, ctx.ast_ctx.alloc(typ.1)),
           );
       }
 
@@ -383,6 +409,7 @@ impl<'a> private::ParseFromCtx<'a> for SchemaInterfacePlaceholder<'a> {
           name,
           fields,
           interfaces,
+          possible_types: Vec::new_in(&ctx.ast_ctx.arena),
       })
   }
 }

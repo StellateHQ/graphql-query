@@ -59,6 +59,13 @@ pub(super) struct SchemaInterfacePlaceholder<'a> {
     pub name: &'a str,
     pub fields: FieldDefinitions<'a>,
     pub(crate) interfaces: Vec<'a, &'a str>,
+    pub(crate) possible_types: Vec<'a, &'a str>,
+}
+
+impl<'a> SchemaInterfacePlaceholder<'a> {
+    pub fn add_possible_type(&mut self, possible_type: &'a str) {
+        self.possible_types.push(possible_type);
+    }
 }
 
 #[derive(Debug, Clone, PartialEq)]
