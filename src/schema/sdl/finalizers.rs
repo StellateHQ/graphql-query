@@ -79,28 +79,41 @@ pub(super) fn initialize_type_definition<'a>(
               let schema_field = convert_to_schema_field(ctx, field.0, field.1)?;
               fields.insert(*field.0, ctx.alloc(schema_field));
             }
+
+            let mut interfaces = Vec::new_in(&ctx.arena);
+            for interface in obj.interfaces.iter() {
+                interfaces.push(*interface)
+            }
+
             Ok(ctx.arena.alloc(SchemaType::Object(ctx.arena.alloc(SchemaObject {
                 name: obj.name,
                 fields,
-                interfaces: Vec::new_in(&ctx.arena),
+                interfaces
+            }))))
+        }
+        TypeDefinition::InputObjectTypeDefinition(obj) => {
+            let mut fields = HashMap::new_in(&ctx.arena);
+            for (name, input_field) in obj.fields.fields.iter() {
+                fields.insert(
+                    *name,
+                    SchemaInputField {
+                        name,
+                        input_type: map_input_type(&ctx, input_field.input_type)?,
+                    },
+                );
+            }
+
+            Ok(ctx.arena.alloc(SchemaType::InputObject(ctx.arena.alloc(SchemaInputObject {
+                name: obj.name,
+                fields
             }))))
         }
         // TODO: similar to object-type definition but for input types
-        TypeDefinition::InputObjectTypeDefinition(obj) => {
-            Ok(ctx.arena.alloc(SchemaType::InputObject(ctx.arena.alloc(SchemaInputObject {
-                name: obj.name,
-                fields: HashMap::new_in(&ctx.arena),
-            }))))
-        }
-
         TypeDefinition::EnumTypeDefinition(e) => Ok(ctx.arena.alloc(SchemaType::Enum(e))),
-
         TypeDefinition::ScalarTypeDefinition(s) => Ok(ctx.arena.alloc(SchemaType::Scalar(s))),
-
         TypeDefinition::InterfaceTypeDefinition(i) => Ok(ctx.arena.alloc(SchemaType::Interface(
             ctx.arena.alloc(SchemaInterface::new(ctx, i.name)),
         ))),
-
         TypeDefinition::UnionTypeDefinition(u) => {
           Ok(ctx.arena.alloc(SchemaType::Union(ctx.arena.alloc(SchemaUnion::new(ctx, u.name)))))
         }
