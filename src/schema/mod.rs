@@ -32,3 +32,4 @@ pub use build_client_schema::BuildClientSchema;
 pub use introspection::{IntrospectionQuery, IntrospectionSchema};
 pub use schema::*;
 pub use schema_reference::*;
+pub use sdl::*;
