@@ -246,6 +246,7 @@ pub(crate) mod private {
 
             for introspection_type_ref in self.possible_types.possible_types.iter() {
                 let name = ctx.ctx.alloc_str(introspection_type_ref.name);
+                // TODO: we should differentiate here whether the referenced type is a schema object or interface
                 schema_interface_type.add_possible_type(ctx.ctx, name);
             }
 

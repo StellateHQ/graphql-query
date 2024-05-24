@@ -1,12 +1,11 @@
 use super::{
-  error::{syntax, syntax_err, SchemaError}, finalizers::initialize_type_definition, parse_ast::*
+  error::{syntax, syntax_err, validation, SchemaError}, finalizers::initialize_type_definition, parse_ast::*
 };
 use crate::{
   ast::{ASTContext, DefaultIn},
   error::{get_location, print_span, Error, ErrorType, Result},
   schema::{
-      sdl::lexer::{Extras, Token},
-      Schema, SchemaEnum, SchemaScalar,
+      sdl::lexer::{Extras, Token}, Schema, SchemaEnum, SchemaPossibleTypes, SchemaScalar
   },
 };
 use bumpalo::collections::Vec;
@@ -165,8 +164,6 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
               }
               _ => {
                 let type_def = TypeDefinition::parse_from_ctx(ctx)?;
-                // TODO: now expand the "InterfaceTypeDefinition(SchemaInterfacePlaceholder<'a>)"
-                // with possible_types, this will require another loop over type_defs.
                 type_defs.insert(type_def.name(), type_def);
               },
           }
@@ -194,6 +191,8 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
         }
       }
 
+      dbg!(type_defs.get("MyInt2"));
+
       for scalar in DEFAULT_SCALARS.iter() {
           schema.types.insert(
               *scalar,
@@ -211,7 +210,77 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       }
 
       for (name, typ) in schema.types.iter() {
-        // TODO: this pass will be used to validate the existence of all references
+        match typ {
+            crate::schema::SchemaType::Object(schema_obj) => {
+                for field in schema_obj.fields.iter() {
+                    // TODO: check field-arguments
+
+                    field.1.output_type.of_type(&schema).output_type().ok_or_else(|| validation!(
+                        "Field `{}` of type `{}` has an invalid type.",
+                        field.0,
+                        name
+                    ))?;
+                }
+
+                for type_name in schema_obj.interfaces.iter() {
+                    schema.get_type(type_name).ok_or_else(|| validation!(
+                        "Interface `{}` on object `{}` does not exist.",
+                        type_name,
+                        schema_obj.name
+                    ))?;
+                }
+
+                // Check whether each interface exists
+            }
+            crate::schema::SchemaType::InputObject(schema_input) => {
+                for field in schema_input.fields.iter() {
+                    field.1.input_type.of_type(&schema).input_type().ok_or_else(|| validation!(
+                        "Field `{}` of type `{}` has an invalid type.",
+                        field.0,
+                        name
+                    ))?;
+                }
+            }
+            crate::schema::SchemaType::Union(schema_union) => {
+                for type_name in schema_union.get_possible_types().iter() {
+                    schema.get_type(type_name).ok_or_else(|| validation!(
+                        "Type `{}` on union `{}` is not a valid type.",
+                        type_name,
+                        schema_union.name
+                    ))?;
+                }
+            }
+            crate::schema::SchemaType::Interface(schema_interface) => {
+                for field in schema_interface.fields.iter() {
+                    // TODO: Check whether each argument refers to a valid type
+
+                    field.1.output_type.of_type(&schema).output_type().ok_or_else(|| validation!(
+                        "Field `{}` of type `{}` has an invalid type.",
+                        field.0,
+                        name
+                    ))?;
+                }
+
+                for type_name in schema_interface.get_possible_types().iter() {
+                    schema.get_type(type_name).ok_or_else(|| validation!(
+                        "Type `{}` on interface `{}` is not a valid type.",
+                        type_name,
+                        schema_interface.name
+                    ))?;
+                }
+
+                for type_name in schema_interface.interfaces.iter() {
+                    schema.get_type(type_name).ok_or_else(|| validation!(
+                        "Interface `{}` on object `{}` does not exist.",
+                        type_name,
+                        schema_interface.name
+                    ))?;
+                }
+            }
+            _ => {
+                // Other types have no issues
+            }
+        }
       } 
 
       // fill in the root types

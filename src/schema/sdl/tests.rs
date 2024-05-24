@@ -380,7 +380,7 @@ fn interfaces_implementing_interfaces() {
   obj.add_interface(&ctx, "MyInt1");
 
   interface1.add_possible_type(&ctx, "MyType");
-  interface2.add_possible_type(&ctx, "MyInt1");
+  interface2.add_possible_interface(&ctx, "MyInt1");
 
   let obj = SchemaType::Object(&obj);
   let interface1 = SchemaType::Interface(&interface1);
