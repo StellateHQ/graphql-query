@@ -267,6 +267,7 @@ fn interface_type_definition() {
           name: "MyInterface",
           fields: FieldDefinitions { fields },
           interfaces: Vec::new_in(&ctx.arena),
+          possible_interfaces: Vec::new_in(&ctx.arena),
           possible_types: Vec::new_in(&ctx.arena),
       },
   );
@@ -718,10 +719,11 @@ fn kitchen_sink() {
   let introspection: IntrospectionQuery = serde_json::from_str(&KITCHEN_SINK).unwrap();
   let mut expected = introspection.build_client_schema(&ctx).clone();
   for (key, _typ) in expected.types.clone().iter() {
-    if !key.starts_with("__") {
+    if key.starts_with("__") {
         expected.types.remove(key);
     }
 }
+
   let parsed = Schema::parse(&ctx, source).unwrap();
   assert_eq!(parsed, &expected);
 }

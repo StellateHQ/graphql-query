@@ -60,11 +60,16 @@ pub(super) struct SchemaInterfacePlaceholder<'a> {
     pub fields: FieldDefinitions<'a>,
     pub(crate) interfaces: Vec<'a, &'a str>,
     pub(crate) possible_types: Vec<'a, &'a str>,
+    pub(crate) possible_interfaces: Vec<'a, &'a str>,
 }
 
 impl<'a> SchemaInterfacePlaceholder<'a> {
     pub fn add_possible_type(&mut self, possible_type: &'a str) {
         self.possible_types.push(possible_type);
+    }
+
+    pub fn add_possible_interface(&mut self, possible_type: &'a str) {
+        self.possible_interfaces.push(possible_type);
     }
 }
 

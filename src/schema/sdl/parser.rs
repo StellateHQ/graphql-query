@@ -177,7 +177,9 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
             TypeDefinition::InterfaceTypeDefinition(i) => {
                 for interface in i.interfaces.iter() {
                     if let Some(TypeDefinition::InterfaceTypeDefinition(implemented_interface)) = type_defs.get_mut(interface) {
-                        implemented_interface.add_possible_type(name);
+                        // TODO: check whether this is the right way to go about it, might be an existing bug in
+                        // the client-schema
+                        implemented_interface.add_possible_interface(name);
                     }
                 }
             },
@@ -410,6 +412,7 @@ impl<'a> private::ParseFromCtx<'a> for SchemaInterfacePlaceholder<'a> {
           fields,
           interfaces,
           possible_types: Vec::new_in(&ctx.ast_ctx.arena),
+          possible_interfaces: Vec::new_in(&ctx.ast_ctx.arena),
       })
   }
 }
