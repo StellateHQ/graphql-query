@@ -194,7 +194,7 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       for scalar in DEFAULT_SCALARS.iter() {
           schema.types.insert(
               *scalar,
-              ctx.ast_ctx.alloc(crate::schema::SchemaType::Scalar(ctx.ast_ctx.alloc(SchemaScalar { name: *scalar }))),
+              ctx.ast_ctx.alloc(crate::schema::SchemaType::Scalar(ctx.ast_ctx.alloc(SchemaScalar { name: scalar }))),
           );
       }
 
@@ -525,7 +525,7 @@ impl<'a> private::ParseFromCtx<'a> for SchemaUnionPlaceholder<'a> {
 
       Ok(SchemaUnionPlaceholder {
           name,
-          types: types,
+          types,
       })
   }
 }
@@ -548,7 +548,7 @@ impl<'a> private::ParseFromCtx<'a> for FieldDefinitions<'a> {
                   Ok(FieldDefinitions { fields })
               }
 
-              t => return syntax_err!("Expected `}}`, got {:?}", t),
+              t => syntax_err!("Expected `}}`, got {:?}", t),
           }
       } else {
           Ok(FieldDefinitions::default_in(&ctx.ast_ctx.arena))
@@ -627,7 +627,7 @@ impl<'a> private::ParseFromCtx<'a> for ArgumentList<'a> {
                   Ok(ArgumentList { arguments })
               }
 
-              t => return syntax_err!("Expected `)`, got {:?}", t),
+              t => syntax_err!("Expected `)`, got {:?}", t),
           }
       } else {
           Ok(ArgumentList::default_in(&ctx.ast_ctx.arena))

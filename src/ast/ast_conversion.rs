@@ -74,7 +74,7 @@ where
 impl<'a> DefaultIn<'a> for Document<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         Document {
-            definitions: Vec::new_in(&arena),
+            definitions: Vec::new_in(arena),
             size_hint: 0,
         }
     }
@@ -83,7 +83,7 @@ impl<'a> DefaultIn<'a> for Document<'a> {
 impl<'a> DefaultIn<'a> for VariableDefinitions<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         VariableDefinitions {
-            children: Vec::new_in(&arena),
+            children: Vec::new_in(arena),
         }
     }
 }
@@ -91,7 +91,7 @@ impl<'a> DefaultIn<'a> for VariableDefinitions<'a> {
 impl<'a> DefaultIn<'a> for ObjectValue<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         ObjectValue {
-            children: Vec::new_in(&arena),
+            children: Vec::new_in(arena),
         }
     }
 }
@@ -99,7 +99,7 @@ impl<'a> DefaultIn<'a> for ObjectValue<'a> {
 impl<'a> DefaultIn<'a> for ListValue<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         ListValue {
-            children: Vec::new_in(&arena),
+            children: Vec::new_in(arena),
         }
     }
 }
@@ -107,7 +107,7 @@ impl<'a> DefaultIn<'a> for ListValue<'a> {
 impl<'a> DefaultIn<'a> for Arguments<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         Arguments {
-            children: Vec::new_in(&arena),
+            children: Vec::new_in(arena),
         }
     }
 }
@@ -115,7 +115,7 @@ impl<'a> DefaultIn<'a> for Arguments<'a> {
 impl<'a> DefaultIn<'a> for Directives<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         Directives {
-            children: Vec::new_in(&arena),
+            children: Vec::new_in(arena),
         }
     }
 }
@@ -123,7 +123,7 @@ impl<'a> DefaultIn<'a> for Directives<'a> {
 impl<'a> DefaultIn<'a> for SelectionSet<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self {
         SelectionSet {
-            selections: Vec::new_in(&arena),
+            selections: Vec::new_in(arena),
         }
     }
 }

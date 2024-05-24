@@ -14,7 +14,7 @@ fn convert_to_schema_field<'a>(ctx: &'a ASTContext, name: &'a str, field: &'a Sc
           *name,
           SchemaInputField {
               name,
-              input_type: map_input_type(&ctx, argument.input_type),
+              input_type: map_input_type(ctx, argument.input_type),
           },
       );
   }
@@ -22,7 +22,7 @@ fn convert_to_schema_field<'a>(ctx: &'a ASTContext, name: &'a str, field: &'a Sc
     SchemaField {
         name,
         arguments,
-        output_type: map_output_type(&ctx, field.output_type),
+        output_type: map_output_type(ctx, field.output_type),
     }
 }
 
@@ -94,7 +94,7 @@ pub(super) fn initialize_type_definition<'a>(
                     *name,
                     SchemaInputField {
                         name,
-                        input_type: map_input_type(&ctx, input_field.input_type),
+                        input_type: map_input_type(ctx, input_field.input_type),
                     },
                 );
             }
@@ -134,7 +134,7 @@ pub(super) fn initialize_type_definition<'a>(
         TypeDefinition::UnionTypeDefinition(u) => {
             let mut schema_union = SchemaUnion::new(ctx, u.name);
             for obj in u.types.iter() {
-                schema_union.add_possible_type(ctx, *obj);
+                schema_union.add_possible_type(ctx, obj);
             }
             ctx.arena.alloc(SchemaType::Union(ctx.arena.alloc(schema_union)))
         }
