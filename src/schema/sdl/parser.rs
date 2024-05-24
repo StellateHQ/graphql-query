@@ -229,8 +229,6 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
                         schema_obj.name
                     ))?;
                 }
-
-                // Check whether each interface exists
             }
             crate::schema::SchemaType::InputObject(schema_input) => {
                 for field in schema_input.fields.iter() {
