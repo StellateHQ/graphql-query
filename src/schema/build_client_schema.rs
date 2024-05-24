@@ -59,7 +59,7 @@ pub(crate) mod private {
                 &bumpalo::Bump,
             > = HashMap::new_in(&self.ctx.arena);
             for introspection_type in introspection.types.iter() {
-                let schema_type = BuildSchemaType::on_create(introspection_type, self);
+                let schema_type = BuildSchemaType::on_create(introspection_type, self, &introspection.types);
                 schema_types.insert(
                     self.ctx.alloc_str(introspection_type.name()),
                     self.ctx.alloc(schema_type),
@@ -94,30 +94,30 @@ pub(crate) mod private {
     }
 
     pub trait BuildSchemaType<'arena, T>: Sized {
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> T;
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, introspection_types: &[IntrospectionType<'arena>]) -> T;
     }
 
     impl<'arena> BuildSchemaType<'arena, SchemaType<'arena>> for IntrospectionType<'arena> {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaType<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, introspection_types: &[IntrospectionType<'arena>]) -> SchemaType<'arena> {
             match self {
                 IntrospectionType::Scalar(scalar) => {
-                    SchemaType::Scalar(ctx.ctx.alloc(scalar.on_create(ctx)))
+                    SchemaType::Scalar(ctx.ctx.alloc(scalar.on_create(ctx, introspection_types)))
                 }
                 IntrospectionType::Object(object) => {
-                    SchemaType::Object(ctx.ctx.alloc(object.on_create(ctx)))
+                    SchemaType::Object(ctx.ctx.alloc(object.on_create(ctx, introspection_types)))
                 }
                 IntrospectionType::Interface(interface) => {
-                    SchemaType::Interface(ctx.ctx.alloc(interface.on_create(ctx)))
+                    SchemaType::Interface(ctx.ctx.alloc(interface.on_create(ctx, introspection_types)))
                 }
                 IntrospectionType::Union(union_type) => {
-                    SchemaType::Union(ctx.ctx.alloc(union_type.on_create(ctx)))
+                    SchemaType::Union(ctx.ctx.alloc(union_type.on_create(ctx, introspection_types)))
                 }
                 IntrospectionType::Enum(enum_type) => {
-                    SchemaType::Enum(ctx.ctx.alloc(enum_type.on_create(ctx)))
+                    SchemaType::Enum(ctx.ctx.alloc(enum_type.on_create(ctx, introspection_types)))
                 }
                 IntrospectionType::InputObject(input_object) => {
-                    SchemaType::InputObject(ctx.ctx.alloc(input_object.on_create(ctx)))
+                    SchemaType::InputObject(ctx.ctx.alloc(input_object.on_create(ctx, introspection_types)))
                 }
             }
         }
@@ -125,16 +125,16 @@ pub(crate) mod private {
 
     impl<'arena> BuildSchemaType<'arena, SchemaScalar<'arena>> for IntrospectionScalarType<'arena> {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaScalar<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, _introspection_types: &[IntrospectionType<'arena>]) -> SchemaScalar<'arena> {
             SchemaScalar::new(ctx.ctx.alloc_str(self.name))
         }
     }
 
     impl<'arena> BuildSchemaType<'arena, SchemaEnum<'arena>> for IntrospectionEnumType<'arena> {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaEnum<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, _introspection_types: &[IntrospectionType<'arena>]) -> SchemaEnum<'arena> {
             let name = ctx.ctx.alloc_str(self.name);
-            let mut enum_type = SchemaEnum::new(&ctx.ctx, name);
+            let mut enum_type = SchemaEnum::new(ctx.ctx, name);
             for value in self.enum_values.iter() {
                 let value_name = ctx.ctx.alloc_str(value.name);
                 enum_type.add_value(ctx.ctx, value_name);
@@ -145,7 +145,7 @@ pub(crate) mod private {
 
     impl<'arena> BuildSchemaType<'arena, SchemaUnion<'arena>> for IntrospectionUnionType<'arena> {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaUnion<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, _introspection_types: &[IntrospectionType<'arena>]) -> SchemaUnion<'arena> {
             let name = ctx.ctx.alloc_str(self.name);
             let mut schema_union_type = SchemaUnion::new(ctx.ctx, name);
             for introspection_type_ref in self.possible_types.possible_types.iter() {
@@ -182,13 +182,13 @@ pub(crate) mod private {
 
     impl<'arena> BuildSchemaType<'arena, SchemaObject<'arena>> for IntrospectionObjectType<'arena> {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaObject<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, _introspection_types: &[IntrospectionType<'arena>]) -> SchemaObject<'arena> {
             let name = ctx.ctx.alloc_str(self.name);
             let mut schema_object_type = SchemaObject::new(ctx.ctx, name);
             for field in self.implementation.fields.iter() {
                 let field_name = ctx.ctx.alloc_str(field.name);
                 let mut schema_field = SchemaField::new(
-                    &ctx.ctx,
+                     ctx.ctx,
                     field_name,
                     from_output_type_ref(ctx.ctx, &field.of_type),
                 );
@@ -217,14 +217,14 @@ pub(crate) mod private {
         for IntrospectionInterfaceType<'arena>
     {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaInterface<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, introspection_types: &[IntrospectionType<'arena>]) -> SchemaInterface<'arena> {
             let name = ctx.ctx.alloc_str(self.name);
             let mut schema_interface_type = SchemaInterface::new(ctx.ctx, name);
 
             for field in self.implementation.fields.iter() {
                 let field_name = ctx.ctx.alloc_str(field.name);
                 let mut schema_field = SchemaField::new(
-                    &ctx.ctx,
+                    ctx.ctx,
                     field_name,
                     from_output_type_ref(ctx.ctx, &field.of_type),
                 );
@@ -237,6 +237,7 @@ pub(crate) mod private {
                 schema_interface_type.add_field(ctx.ctx, schema_field);
             }
 
+            dbg!(self.name, &self.implementation.interfaces);
             if let Some(interfaces) = &self.implementation.interfaces {
                 for introspection_type_ref in interfaces.iter() {
                     let name = ctx.ctx.alloc_str(introspection_type_ref.name);
@@ -244,10 +245,24 @@ pub(crate) mod private {
                 }
             }
 
+            dbg!(self.name, &self.possible_types.possible_types);
             for introspection_type_ref in self.possible_types.possible_types.iter() {
                 let name = ctx.ctx.alloc_str(introspection_type_ref.name);
-                // TODO: we should differentiate here whether the referenced type is a schema object or interface
-                schema_interface_type.add_possible_type(ctx.ctx, name);
+                if let Some(kind) = introspection_type_ref.kind {
+                    if kind == "INTERFACE" {
+                        schema_interface_type.add_possible_interface(ctx.ctx, name);
+                    } else {
+                        schema_interface_type.add_possible_type(ctx.ctx, name);
+                    }
+                } else {
+                    let introspection_type = introspection_types.iter().find(|f| f.name() == name);
+                    if let Some(IntrospectionType::Interface(_)) = introspection_type {
+                        schema_interface_type.add_possible_interface(ctx.ctx, name);
+                    } else {
+                        schema_interface_type.add_possible_type(ctx.ctx, name);
+                    }
+                }
+
             }
 
             schema_interface_type
@@ -258,7 +273,7 @@ pub(crate) mod private {
         for IntrospectionInputObjectType<'arena>
     {
         #[inline]
-        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>) -> SchemaInputObject<'arena> {
+        fn on_create(&self, ctx: &'arena BuildSchemaContext<'arena>, _introspection_types: &[IntrospectionType<'arena>]) -> SchemaInputObject<'arena> {
             let name = ctx.ctx.alloc_str(self.name);
             let mut input = SchemaInputObject::new(ctx.ctx, name);
             for field in self.input_fields.iter() {

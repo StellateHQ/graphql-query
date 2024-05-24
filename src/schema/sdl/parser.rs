@@ -191,8 +191,6 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
         }
       }
 
-      dbg!(type_defs.get("MyInt2"));
-
       for scalar in DEFAULT_SCALARS.iter() {
           schema.types.insert(
               *scalar,
@@ -205,7 +203,7 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       for typ in type_defs.into_iter() {
           schema.types.insert(
               typ.0,
-              initialize_type_definition(&ctx.ast_ctx, ctx.ast_ctx.alloc(typ.1)),
+              initialize_type_definition(ctx.ast_ctx, ctx.ast_ctx.alloc(typ.1)),
           );
       }
 

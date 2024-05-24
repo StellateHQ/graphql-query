@@ -73,7 +73,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoFragmentCycles<'a> {
         _document: &'a Document<'a>,
         _info: &VisitInfo,
     ) -> VisitFlow {
-        let mut visited: Vec<&'a str> = Vec::new_in(&ctx.arena);
+        let mut visited: Vec<&'a str> = Vec::new_in(ctx.arena);
         for (name, _) in self.fragment_edges.iter() {
             if contains_edge(&mut visited, name, name, &self.fragment_edges) {
                 ctx.add_error("Cannot spread fragments within themselves");

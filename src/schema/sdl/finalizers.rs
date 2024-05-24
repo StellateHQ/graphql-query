@@ -115,16 +115,17 @@ pub(super) fn initialize_type_definition<'a>(
             }
 
             for obj in i.interfaces.iter() {
-                schema_interface.add_interface(ctx, *obj);
+                schema_interface.add_interface(ctx, obj);
             }
 
             for obj in i.possible_types.iter() {
-                schema_interface.add_possible_type(ctx, *obj);
+                schema_interface.add_possible_type(ctx, obj);
             }
 
-            for obj in i.possible_interfaces.iter() {
-                schema_interface.add_possible_type(ctx, *obj);
-            }
+            // TODO: possible interfaces aren't conveyed in the introspection
+            //for obj in i.possible_interfaces.iter() {
+            // schema_interface.add_possible_interface(ctx, obj);
+            //}
 
             ctx.arena.alloc(SchemaType::Interface(
                 ctx.arena.alloc(schema_interface),

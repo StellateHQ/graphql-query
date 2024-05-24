@@ -25,7 +25,7 @@ impl<'a> DefaultIn<'a> for Schema<'a> {
             query_type: None,
             mutation_type: None,
             subscription_type: None,
-            types: HashMap::new_in(&arena),
+            types: HashMap::new_in(arena),
         }
     }
 }
@@ -70,7 +70,7 @@ impl<'a> Schema<'a> {
     /// Retrieves a kind by name from known schema types.
     #[inline]
     pub fn get_type(&self, name: &'a str) -> Option<&'a SchemaType<'a>> {
-        self.types.get(name).map(|x| *x)
+        self.types.get(name).copied()
     }
 
     /// Checks whether a given type is a sub type of another.
@@ -105,7 +105,7 @@ pub trait SchemaFields<'a>: Sized {
 
     /// Get a known field by name
     fn get_field(&self, name: &'a str) -> Option<&SchemaField<'a>> {
-        self.get_fields().get(name).map(|x| *x)
+        self.get_fields().get(name).copied()
     }
 }
 
