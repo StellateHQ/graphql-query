@@ -149,12 +149,12 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
       let mut schema = Schema::default_in(&ctx.ast_ctx.arena);
       let mut schema_def = None;
       let mut type_defs = HashMap::new_in(&ctx.ast_ctx.arena);
+      let mut directive_defs = HashMap::new_in(&ctx.ast_ctx.arena);
       // TODO: store schema extensions here and merge after first loop
       // let mut schema_extensions = HashMap::new_in(&ctx.ast_ctx.arena);
       loop {
           match ctx.peek() {
               Token::End => break,
-              // TODO: add support for directives
               Token::Name("schema") => {
                   if schema_def.is_none() {
                       schema_def = Some(SchemaDefinition::parse_from_ctx(ctx)?)
@@ -162,12 +162,18 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
                       return syntax_err!("Must not specify more than one Schema Definition.");
                   }
               }
+              Token::Name("directive") => {
+                let directive_def = DirectiveDefinition::parse_from_ctx(ctx)?;
+                directive_defs.insert(directive_def.name(), directive_def);
+              }
               _ => {
                 let type_def = TypeDefinition::parse_from_ctx(ctx)?;
                 type_defs.insert(type_def.name(), type_def);
               },
           }
       }
+
+      dbg!(directive_defs);
 
       for (name, typ) in type_defs.clone().iter() {
         match typ {
@@ -190,8 +196,6 @@ impl<'a> private::ParseFromCtx<'a> for Schema<'a> {
             _ => (),
         }
       }
-
-      dbg!(type_defs.get("MyInt2"));
 
       for scalar in DEFAULT_SCALARS.iter() {
           schema.types.insert(
@@ -378,6 +382,84 @@ impl<'a> private::ParseFromCtx<'a> for SchemaDefinition<'a> {
 
       Ok(defs)
   }
+}
+
+impl<'a> private::ParseFromCtx<'a> for DirectiveDefinition<'a> {
+    #[inline]
+    fn parse_from_ctx(ctx: &mut private::ParserContext<'a>) -> ParseResult<Self> {
+        if ctx.next() != Token::Name("directive") {
+            return syntax_err!("Directive definition must start with the `directive` keyword.");
+        }
+    
+        let name = match ctx.next() {
+            Token::DirectiveName(name) => name,
+            t => return syntax_err!("Expected directive name, got {:?}", t),
+        };
+
+        let arguments = match ctx.peek() {
+            Token::ParenOpen => ArgumentList::parse_from_ctx(ctx)?,
+            _ => {
+                ArgumentList::default_in(&ctx.ast_ctx.arena)
+            }
+        };
+
+        dbg!(ctx.peek());
+        let is_repeatable = match ctx.peek() {
+            Token::Name("repeatable") => {
+                ctx.next(); // Skip `repeatable`
+                true
+            }
+            _ => false,
+        };
+    
+        let locations = match ctx.peek() {
+            Token::On => {
+                ctx.next(); // Skip `on`
+                let mut locations = Vec::new_in(&ctx.ast_ctx.arena);
+                loop {
+                    match ctx.next() {
+                        Token::Name("QUERY") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Query)),
+                        Token::Name("MUTATION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Mutation)),
+                        Token::Name("SUBSCRIPTION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Subscription)),
+                        Token::Name("FIELD") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Field)),
+                        Token::Name("FRAGMENT_DEFINITION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::FragmentDefinition)),
+                        Token::Name("FRAGMENT_SPREAD") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::FragmentSpread)),
+                        Token::Name("INLINE_FRAGMENT") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::InlineFragment)),
+                        Token::Name("SCHEMA") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Schema)),
+                        Token::Name("SCALAR") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Scalar)),
+                        Token::Name("OBJECT") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Object)),
+                        Token::Name("FIELD_DEFINITION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::FieldDefinition)),
+                        Token::Name("ARGUMENT_DEFINITION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::ArgumentDefinition)),
+                        Token::Name("INTERFACE") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Interface)),
+                        Token::Name("UNION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Union)),
+                        Token::Name("ENUM") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::Enum)),
+                        Token::Name("ENUM_VALUE") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::EnumValue)),
+                        Token::Name("INPUT_OBJECT") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::InputObject)),
+                        Token::Name("INPUT_FIELD_DEFINITION") => locations.push(ctx.ast_ctx.alloc(DirectiveLocation::InputFieldDefinition)),
+                        t => return syntax_err!("Expected directive location, got {:?}", t),
+                    }
+    
+                    if ctx.peek() == &Token::Pipe {
+                        ctx.next();
+                    } else {
+                        break;
+                    }
+                }
+
+                locations
+            }
+            _ => {
+                return syntax_err!("Expected `on`");
+            }
+        };
+
+        Ok(DirectiveDefinition {
+            name,
+            locations,
+            is_repeatable,
+            arguments,
+        })
+    }
 }
 
 impl<'a> private::ParseFromCtx<'a> for TypeDefinition<'a> {

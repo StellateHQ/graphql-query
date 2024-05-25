@@ -30,6 +30,15 @@ where
   assert_eq!(*T::parse(ctx, source).unwrap(), expected);
 }
 
+fn parse<'a, T: 'a>(ctx: &'a ASTContext, source: &'a str) -> &'a T
+where
+  T: ParseSdl<'a> + std::fmt::Debug + PartialEq,
+{
+    let res = T::parse(ctx, source);
+    dbg!(&res);
+    res.unwrap()
+}
+
 #[test]
 fn empty_schema() {
   let ctx = ASTContext::new();
@@ -606,6 +615,20 @@ fn input_output_type() {
           &TypeWrapper::List(&TypeWrapper::NonNull(&TypeWrapper::Named("String"))),
       ))),
   );
+}
+
+#[test]
+fn parses_directives() {
+    let ctx = ASTContext::new();
+    let source = indoc! {"
+        directive @example on FIELD_DEFINITION | ARGUMENT_DEFINITION
+        directive @example_2(name: String!) on OBJECT | INTERFACE
+        directive @example_3(name: String!) repeatable on OBJECT | INTERFACE
+        directive @example_4 repeatable on OBJECT | INTERFACE
+    "};
+
+    let result: &Schema = parse(&ctx, source);
+    dbg!(result);
 }
 
 /// Complete test schema of what we currently support.

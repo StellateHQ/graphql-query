@@ -44,6 +44,9 @@ pub enum Token<'a> {
     #[token(",")]
     Comma,
 
+    #[token("on")]
+    On,
+
     #[regex(r"@[_a-zA-Z][_0-9a-zA-Z]*", |lex| &lex.slice()[1..])]
     DirectiveName(&'a str),
 

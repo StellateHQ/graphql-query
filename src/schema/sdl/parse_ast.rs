@@ -11,6 +11,42 @@ pub(super) struct SchemaDefinition<'a> {
     pub(super) subscription_root_type_name: Option<&'a str>,
 }
 
+#[derive(Debug, Clone)]
+pub(super) struct DirectiveDefinition<'a> {
+    pub name: &'a str,
+    pub locations: Vec<'a, &'a DirectiveLocation>,
+    pub is_repeatable: bool,
+    pub arguments: ArgumentList<'a>
+}
+
+impl<'a> DirectiveDefinition<'a> {
+    pub(crate) fn name(&self) -> &'a str {
+        self.name
+    }
+}
+
+#[derive(Debug, Clone)]
+pub(super) enum DirectiveLocation {
+    Query,
+    Mutation,
+    Subscription,
+    Field,
+    FragmentDefinition,
+    FragmentSpread,
+    InlineFragment,
+    Schema,
+    Scalar,
+    Object,
+    FieldDefinition,
+    ArgumentDefinition,
+    Interface,
+    Union,
+    Enum,
+    EnumValue,
+    InputObject,
+    InputFieldDefinition,
+}
+
 /// https://github.com/graphql/graphql-spec/blob/main/spec/Section%203%20--%20Type%20System.md#types
 #[derive(Debug, Clone)]
 pub(super) enum TypeDefinition<'a> {
