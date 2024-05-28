@@ -245,7 +245,6 @@ pub(crate) mod private {
                 }
             }
 
-            dbg!(self.name, &self.possible_types.possible_types);
             for introspection_type_ref in self.possible_types.possible_types.iter() {
                 let name = ctx.ctx.alloc_str(introspection_type_ref.name);
                 if let Some(kind) = introspection_type_ref.kind {
