@@ -237,7 +237,6 @@ pub(crate) mod private {
                 schema_interface_type.add_field(ctx.ctx, schema_field);
             }
 
-            dbg!(self.name, &self.implementation.interfaces);
             if let Some(interfaces) = &self.implementation.interfaces {
                 for introspection_type_ref in interfaces.iter() {
                     let name = ctx.ctx.alloc_str(introspection_type_ref.name);
