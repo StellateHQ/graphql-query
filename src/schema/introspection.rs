@@ -154,7 +154,7 @@ pub enum IntrospectionInputTypeRef<'a> {
 #[cfg_attr(feature = "json", derive(Deserialize, Serialize))]
 #[cfg_attr(feature = "json", serde(rename_all = "camelCase"))]
 pub struct IntrospectionNamedTypeRef<'a> {
-    #[cfg_attr(feature = "json", serde(skip))]
+    #[cfg_attr(feature = "json", serde(borrow))]
     pub kind: Option<&'a str>,
     #[cfg_attr(feature = "json", serde(borrow))]
     pub name: &'a str,

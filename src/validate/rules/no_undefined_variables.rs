@@ -124,7 +124,7 @@ impl<'a> Visitor<'a, ValidationContext<'a>> for NoUndefinedVariables<'a> {
         _document: &'a Document<'a>,
         _info: &VisitInfo,
     ) -> VisitFlow {
-        let mut visited: Vec<&'a str> = Vec::new_in(&ctx.arena);
+        let mut visited: Vec<&'a str> = Vec::new_in(ctx.arena);
         for operation_edge in self.operation_edges.iter() {
             if references_undefined_var(
                 &mut visited,

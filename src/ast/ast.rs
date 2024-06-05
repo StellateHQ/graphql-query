@@ -469,7 +469,7 @@ impl<'a> Selection<'a> {
     #[inline]
     pub fn field(&'a self) -> Option<&'a Field<'a>> {
         match self {
-            Selection::Field(field) => Some(&field),
+            Selection::Field(field) => Some(field),
             Selection::FragmentSpread(_) => None,
             Selection::InlineFragment(_) => None,
         }
@@ -479,7 +479,7 @@ impl<'a> Selection<'a> {
     #[inline]
     pub fn fragment_spread(&'a self) -> Option<&'a FragmentSpread<'a>> {
         match self {
-            Selection::FragmentSpread(spread) => Some(&spread),
+            Selection::FragmentSpread(spread) => Some(spread),
             Selection::Field(_) => None,
             Selection::InlineFragment(_) => None,
         }
@@ -489,7 +489,7 @@ impl<'a> Selection<'a> {
     #[inline]
     pub fn inline_fragment(&'a self) -> Option<&'a InlineFragment<'a>> {
         match self {
-            Selection::InlineFragment(fragment) => Some(&fragment),
+            Selection::InlineFragment(fragment) => Some(fragment),
             Selection::FragmentSpread(_) => None,
             Selection::Field(_) => None,
         }

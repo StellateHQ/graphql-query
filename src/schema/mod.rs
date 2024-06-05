@@ -21,12 +21,13 @@
 //!
 //! [More information on the Schema struct.](Schema)
 
-pub mod build_client_schema;
-pub mod introspection;
 #[allow(clippy::module_inception)]
-pub mod schema;
+mod schema;
 mod schema_reference;
 
+pub mod build_client_schema;
+pub mod introspection;
+pub mod sdl;
 pub use build_client_schema::BuildClientSchema;
 pub use introspection::{IntrospectionQuery, IntrospectionSchema};
 pub use schema::*;
