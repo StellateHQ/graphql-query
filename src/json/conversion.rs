@@ -78,7 +78,7 @@ impl<'a> ValueFromNode<'a> for Variable<'a> {
     fn to_json(self, variables: Option<&Variables<'a>>) -> JSValue {
         variables
             .and_then(|vars| vars.get(self.name))
-            .map(|value| value.clone().to_json(None))
+            .map(|value| (*value).clone().to_json(None))
             .unwrap_or(JSValue::Null)
     }
 }

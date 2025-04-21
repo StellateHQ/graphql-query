@@ -33,7 +33,8 @@ pub fn ast_variables_from_value<'a>(
                     _ => &var_def.default_value,
                 },
             };
-            vars.insert(var_def.variable.name, value.to_owned());
+
+            vars.insert(var_def.variable.name, value);
         }
         Ok(vars)
     } else {
@@ -181,7 +182,7 @@ pub fn ast_from_value_untyped<'a>(ctx: &'a ASTContext, value: &JSValue) -> Value
 pub fn value_from_ast_variables<'a>(variable: &'a Variables<'a>) -> JSMap<String, JSValue> {
     let mut map = JSMap::new();
     for (key, value) in variable.iter() {
-        map.insert(key.to_string(), value.clone().to_json(None));
+        map.insert(key.to_string(), (*value).clone().to_json(None));
     }
     map
 }
@@ -203,10 +204,12 @@ pub fn value_from_ast<'a>(
                 .children
                 .iter()
                 .map(|value| value_from_ast(value, of_type, variables));
+
             let mut new_children = vec![];
             for item in new_list_children_iter {
                 new_children.push(item?);
             }
+
             Ok(JSValue::Array(new_children))
         }
 

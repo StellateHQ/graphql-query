@@ -35,5 +35,10 @@ pub mod visit;
 
 pub use bumpalo;
 
+use hashbrown::hash_map::DefaultHashBuilder;
+
 #[cfg(feature = "json")]
 pub mod json;
+
+pub type ArenaVec<'arena, T> = bumpalo::collections::vec::Vec<'arena, T>;
+pub type ArenaHashMap<'arena, K, V> = hashbrown::HashMap<K, V, DefaultHashBuilder, &'arena bumpalo::Bump>;

@@ -288,7 +288,7 @@ impl<'a> SchemaPossibleTypes<'a> for SchemaInterface<'a> {
     fn add_possible_type(&mut self, _ctx: &'a ASTContext, object: &'a str) {
         self.possible_types.push(object);
     }
-    
+
     /// Get list of possible [SchemaObject] types
     #[inline]
     fn get_possible_types(&self) -> Vec<'a, &'a str> {
@@ -806,7 +806,7 @@ where
 }
 
 /// Helper trait to generalize comparisons (see `eq_named_lists`).
-trait Named {
+pub trait Named {
     fn name(&self) -> &str;
 }
 

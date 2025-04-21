@@ -1,7 +1,9 @@
 pub use super::ast_conversion::*;
-use crate::error::{Error, ErrorType, Result};
+use crate::{
+    error::{Error, ErrorType, Result},
+    ArenaHashMap, ArenaVec,
+};
 use bumpalo::collections::CollectIn;
-use hashbrown::{hash_map::DefaultHashBuilder, HashMap};
 
 /// A context for a GraphQL document which holds an arena allocator.
 ///
@@ -58,7 +60,7 @@ impl Default for ASTContext {
 /// Map of AST Values for GraphQL Variables
 ///
 /// [Reference](https://spec.graphql.org/October2021/#sec-Coercing-Variable-Values)
-pub type Variables<'a> = HashMap<&'a str, Value<'a>, DefaultHashBuilder, &'a bumpalo::Bump>;
+pub type Variables<'a> = ArenaHashMap<'a, &'a str, &'a Value<'a>>;
 
 /// AST Node of a boolean value
 ///
@@ -232,11 +234,8 @@ impl<'a> ObjectValue<'a> {
     }
 
     /// Returns a `Map` keyed by all object field's names mapped to their values.
-    pub fn as_map(
-        &'a self,
-        ctx: &'a ASTContext,
-    ) -> HashMap<&str, &Value<'a>, DefaultHashBuilder, &'a bumpalo::Bump> {
-        let mut map = HashMap::new_in(&ctx.arena);
+    pub fn as_map(&'a self, ctx: &'a ASTContext) -> ArenaHashMap<'a, &'a str, &'a Value<'a>> {
+        let mut map = ArenaHashMap::new_in(&ctx.arena);
         for field in self.children.iter() {
             map.insert(field.name, &field.value);
         }
@@ -260,7 +259,7 @@ pub struct Argument<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#Arguments)
 #[derive(Debug, PartialEq, Clone)]
 pub struct Arguments<'a> {
-    pub children: bumpalo::collections::Vec<'a, Argument<'a>>,
+    pub children: ArenaVec<'a, Argument<'a>>,
 }
 
 impl<'a> Arguments<'a> {
@@ -288,11 +287,8 @@ impl<'a> Arguments<'a> {
     }
 
     /// Returns a `Map` keyed by all arguments' names mapped to their values.
-    pub fn as_map(
-        &'a self,
-        ctx: &'a ASTContext,
-    ) -> HashMap<&str, &Value<'a>, DefaultHashBuilder, &'a bumpalo::Bump> {
-        let mut map = HashMap::new_in(&ctx.arena);
+    pub fn as_map(&'a self, ctx: &'a ASTContext) -> ArenaHashMap<'a, &'a str, &'a Value<'a>> {
+        let mut map = ArenaHashMap::new_in(&ctx.arena);
         for argument in self.children.iter() {
             map.insert(argument.name, &argument.value);
         }
@@ -579,7 +575,7 @@ pub struct VariableDefinition<'a> {
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct VariableDefinitions<'a> {
-    pub children: bumpalo::collections::Vec<'a, VariableDefinition<'a>>,
+    pub children: ArenaVec<'a, VariableDefinition<'a>>,
 }
 
 impl<'a> VariableDefinitions<'a> {
@@ -593,12 +589,19 @@ impl<'a> VariableDefinitions<'a> {
     pub fn as_map(
         &'a self,
         ctx: &'a ASTContext,
-    ) -> HashMap<&str, &'a VariableDefinition<'a>, DefaultHashBuilder, &'a bumpalo::Bump> {
-        let mut map = HashMap::new_in(&ctx.arena);
+    ) -> ArenaHashMap<'a, &'a str, &'a VariableDefinition<'a>> {
+        let mut map = ArenaHashMap::new_in(&ctx.arena);
         for var_def in self.children.iter() {
             map.insert(var_def.variable.name, var_def);
         }
         map
+    }
+
+    /// Creates an empty VariableDefinitions in the given arena.
+    pub fn default_in(bump: &'a bumpalo::Bump) -> Self {
+        Self {
+            children: ArenaVec::new_in(bump),
+        }
     }
 }
 
@@ -706,9 +709,9 @@ impl<'a, 'b> Document<'a> {
     pub(crate) fn fragments_with_index(
         &'a self,
         ctx: &'a ASTContext,
-    ) -> hashbrown::HashMap<&str, FragmentDefinitionWithIndex<'a>, DefaultHashBuilder, &bumpalo::Bump>
-    {
-        let mut map = hashbrown::HashMap::new_in(&ctx.arena);
+    ) -> ArenaHashMap<'a, &'a str, FragmentDefinitionWithIndex<'a>> {
+        let mut map = ArenaHashMap::new_in(&ctx.arena);
+
         for (index, definition) in self.definitions.iter().enumerate() {
             if let Definition::Fragment(fragment) = definition {
                 map.insert(
@@ -717,6 +720,7 @@ impl<'a, 'b> Document<'a> {
                 );
             }
         }
+
         map
     }
 
@@ -726,8 +730,8 @@ impl<'a, 'b> Document<'a> {
     pub fn fragments(
         &'a self,
         ctx: &'a ASTContext,
-    ) -> HashMap<&str, &'a FragmentDefinition<'a>, DefaultHashBuilder, &'a bumpalo::Bump> {
-        let mut map = HashMap::new_in(&ctx.arena);
+    ) -> ArenaHashMap<'a, &'a str, &'a FragmentDefinition<'a>> {
+        let mut map = ArenaHashMap::new_in(&ctx.arena);
         for definition in self.definitions.iter() {
             if let Definition::Fragment(fragment) = definition {
                 map.insert(fragment.name.name, fragment);
