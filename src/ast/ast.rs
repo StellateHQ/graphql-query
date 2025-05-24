@@ -194,7 +194,7 @@ impl<'a> Value<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#sec-List-Value)
 #[derive(Debug, PartialEq, Clone)]
 pub struct ListValue<'a> {
-    pub children: bumpalo::collections::Vec<'a, Value<'a>>,
+    pub children: ArenaVec<'a, Value<'a>>,
 }
 
 impl<'a> ListValue<'a> {
@@ -223,7 +223,7 @@ pub struct ObjectField<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#sec-Input-Object-Values)
 #[derive(Debug, PartialEq, Clone)]
 pub struct ObjectValue<'a> {
-    pub children: bumpalo::collections::Vec<'a, ObjectField<'a>>,
+    pub children: ArenaVec<'a, ObjectField<'a>>,
 }
 
 impl<'a> ObjectValue<'a> {
@@ -312,7 +312,7 @@ pub struct Directive<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#sec-Language.Directives)
 #[derive(Debug, PartialEq, Clone)]
 pub struct Directives<'a> {
-    pub children: bumpalo::collections::Vec<'a, Directive<'a>>,
+    pub children: ArenaVec<'a, Directive<'a>>,
 }
 
 impl<'a> Directives<'a> {
@@ -328,7 +328,7 @@ impl<'a> Directives<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#sec-Selection-Sets)
 #[derive(Debug, PartialEq, Clone)]
 pub struct SelectionSet<'a> {
-    pub selections: bumpalo::collections::Vec<'a, Selection<'a>>,
+    pub selections: ArenaVec<'a, Selection<'a>>,
 }
 
 impl<'a> SelectionSet<'a> {
@@ -687,7 +687,7 @@ pub struct OperationDefinition<'a> {
 /// [Reference](https://spec.graphql.org/October2021/#sec-Document)
 #[derive(Debug, PartialEq, Clone)]
 pub struct Document<'a> {
-    pub definitions: bumpalo::collections::Vec<'a, Definition<'a>>,
+    pub definitions: ArenaVec<'a, Definition<'a>>,
     /// A hint on how large the source text was from which this Document was parsed.
     ///
     /// This gives an initial indication of the starting capacity of a `String` that will hold the stringified

@@ -32,6 +32,11 @@ impl<'a> SchemaReference<'a> {
         }
     }
 
+    #[inline]
+    pub fn schema(&self) -> &'a Schema<'a> {
+        self.schema
+    }
+
     /// Create a schema reference pointer from a schema and selected fragment type-condition
     #[inline]
     pub fn from_fragment(schema: &'a Schema<'a>, type_condition: &'a str) -> Result<Self> {

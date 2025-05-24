@@ -1,4 +1,4 @@
-use crate::ast::{ASTContext, DefaultIn, OperationKind};
+use crate::ast::{ASTContext, DefaultIn, NamedType, OperationKind, Type};
 use bumpalo::collections::Vec;
 use bumpalo::Bump;
 use hashbrown::hash_map::DefaultHashBuilder;
@@ -825,5 +825,23 @@ impl<'a> Named for &'a SchemaObject<'a> {
 impl<'a> Named for &'a SchemaUnion<'a> {
     fn name(&self) -> &str {
         self.name
+    }
+}
+
+pub fn schema_type_to_type<'arena>(
+    ctx: &'arena ASTContext,
+    schema: &'arena Schema,
+    schema_type: TypeRef<'arena>,
+) -> Type<'arena> {
+    match schema_type {
+        t @ TypeRef::Type(_) => match t.of_type(schema).input_type().expect("input schema type") {
+            InputType::InputObject(SchemaInputObject { name, .. })
+            | InputType::Scalar(SchemaScalar { name, .. })
+            | InputType::Enum(SchemaEnum { name, .. }) => Type::NamedType(NamedType { name }),
+        },
+        TypeRef::ListType(t) => Type::ListType(ctx.alloc(schema_type_to_type(ctx, schema, *t))),
+        TypeRef::NonNullType(t) => {
+            Type::NonNullType(ctx.alloc(schema_type_to_type(ctx, schema, *t)))
+        }
     }
 }

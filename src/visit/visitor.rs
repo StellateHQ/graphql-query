@@ -221,6 +221,7 @@ pub trait Visitor<'a, Context = ()>: Sized {
     ) -> VisitFlow {
         VisitFlow::Next
     }
+
     /// Called after a [Directive] node and its child nodes were visited.
     fn leave_directive(
         &mut self,
