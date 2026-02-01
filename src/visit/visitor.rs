@@ -262,7 +262,7 @@ pub trait VisitNode<'a>: Sized + private::VisitNodeWithInfo<'a> {
     ///
     /// The visitor must implement the [Visitor] trait which may also define a custom context structure
     /// that can be passed to the `visit` method. By default the context is an empty unit `()`.
-    fn visit<'b, C, V: Visitor<'a, C>>(&'a self, ctx: &'b mut C, visitor: &'b mut V) -> VisitFlow {
+    fn visit<'b, C, V: Visitor<'a, C>>(&'a self, ctx: &'b C, visitor: &'b mut V) -> VisitFlow {
         let mut info = VisitInfo::default();
         self.visit_with_info(ctx, visitor, &mut info)
     }
@@ -274,7 +274,7 @@ impl<'a> private::VisitNodeWithInfo<'a> for Argument<'a> {
     #[inline]
     fn visit_with_info<'b, C, V: Visitor<'a, C>>(
         &'a self,
-        ctx: &'b mut C,
+        ctx: &'b C,
         visitor: &'b mut V,
         info: &mut VisitInfo,
     ) -> VisitFlow {

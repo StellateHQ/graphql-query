@@ -19,7 +19,7 @@ json = ["serde_json", "serde"]
 [dependencies]
 hashbrown = { version = "0.14.0", features = ["allocator-api2"] }
 serde_json = { version = "^1.0.0", optional = true }
-bumpalo = { version = "3.9", features = [
+bumpalo = { version = "3.19", features = [
     "collections",
     "boxed",
     "serde",

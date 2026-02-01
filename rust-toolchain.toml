@@ -1,5 +1,5 @@
 [toolchain]
-channel = "1.85.1"
+channel = "1.89.0"
 components = []
 targets = ["wasm32-unknown-unknown"]
 profile = "minimal"
