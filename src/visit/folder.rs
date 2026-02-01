@@ -41,7 +41,7 @@ pub(crate) mod private {
             }
         }
 
-        pub(crate) fn new_vec<T>(&self) -> Vec<T> {
+        pub(crate) fn new_vec<T>(&self) -> Vec<'_, T> {
             Vec::new_in(&self.ctx.arena)
         }
 
