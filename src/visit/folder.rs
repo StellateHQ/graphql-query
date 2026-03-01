@@ -644,13 +644,24 @@ impl<'a> private::FoldNode<'a> for FragmentSpread<'a> {
         let spread = &folder.enter_fragment_spread(ctx.ctx, self.clone(), info)?;
         let spread = if ctx.recurse {
             let fragment_name = spread.name.name;
-            let mut borrowed_fragment_names = ctx.fragment_names.borrow_mut();
-            let fragment_name =
-                if let Some(fragment_name) = borrowed_fragment_names.get(fragment_name) {
-                    fragment_name
-                } else if let Some(FragmentDefinitionWithIndex { fragment, index }) =
-                    ctx.fragments.borrow().get(spread.name.name)
-                {
+
+            // Check if fragment was already visited (short borrow, released before recursion)
+            let already_visited = {
+                let borrowed = ctx.fragment_names.borrow();
+                borrowed.get(fragment_name).copied()
+            };
+
+            let fragment_name = if let Some(fragment_name) = already_visited {
+                fragment_name
+            } else {
+                // Get the fragment definition (short borrow of fragments)
+                let fragment_and_index = ctx
+                    .fragments
+                    .borrow()
+                    .get(spread.name.name)
+                    .map(|f| (f.fragment.clone(), f.index));
+
+                if let Some((fragment, index)) = fragment_and_index {
                     let path = info.path.clone();
                     info.path = Path::default();
                     info.path.push(PathSegment::Index(index.to_owned()));
@@ -662,14 +673,17 @@ impl<'a> private::FoldNode<'a> for FragmentSpread<'a> {
                     ctx.definitions
                         .borrow_mut()
                         .push(Definition::Fragment(fragment));
-                    borrowed_fragment_names.insert(fragment_name, fragment_name);
+                    ctx.fragment_names
+                        .borrow_mut()
+                        .insert(fragment_name, fragment_name);
                     fragment_name
                 } else {
                     return Err(Error::new(
                         format!("The fragment '{}' does not exist", fragment_name),
                         None,
                     ));
-                };
+                }
+            };
 
             info.path.push(PathSegment::Directives);
             let directives = spread.directives.fold_with_ctx(info, ctx, folder)?;

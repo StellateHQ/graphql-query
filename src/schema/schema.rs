@@ -104,7 +104,7 @@ pub trait SchemaFields<'a>: Sized {
     ) -> HashMap<&'a str, &'a SchemaField<'a>, DefaultHashBuilder, &'a bumpalo::Bump>;
 
     /// Get a known field by name
-    fn get_field(&self, name: &'a str) -> Option<&SchemaField<'a>> {
+    fn get_field(&self, name: &'a str) -> Option<&'a SchemaField<'a>> {
         self.get_fields().get(name).copied()
     }
 }
