@@ -58,14 +58,6 @@ impl<'a> IntoIterator for SelectionSet<'a> {
     }
 }
 
-// impl<'arena> Iterator for SelectionSet<'arena> {
-//     type Item = Selection<'arena>;
-
-//     fn next(&mut self) -> Option<Self::Item> {
-//         self.selections.next()
-//     }
-// }
-
 pub trait DefaultIn<'a> {
     fn default_in(arena: &'a bumpalo::Bump) -> Self;
 }
