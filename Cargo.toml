@@ -1,6 +1,6 @@
 [package]
 name = "graphql-query"
-version = "1.0.0"
+version = "1.0.1"
 authors = ["Stellate <engineering@stellate.co>"]
 repository = "https://github.com/StellateHQ/graphql-query"
 description = "Stupendously fast and easy GraphQL Query Language handling."
