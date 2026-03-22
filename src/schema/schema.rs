@@ -1,4 +1,4 @@
-use crate::ast::{ASTContext, DefaultIn, OperationKind};
+use crate::ast::{ASTContext, DefaultIn, NamedType, OperationKind, Type};
 use bumpalo::collections::Vec;
 use bumpalo::Bump;
 use hashbrown::hash_map::DefaultHashBuilder;
@@ -104,7 +104,7 @@ pub trait SchemaFields<'a>: Sized {
     ) -> HashMap<&'a str, &'a SchemaField<'a>, DefaultHashBuilder, &'a bumpalo::Bump>;
 
     /// Get a known field by name
-    fn get_field(&self, name: &'a str) -> Option<&SchemaField<'a>> {
+    fn get_field(&self, name: &'a str) -> Option<&'a SchemaField<'a>> {
         self.get_fields().get(name).copied()
     }
 }
@@ -288,7 +288,7 @@ impl<'a> SchemaPossibleTypes<'a> for SchemaInterface<'a> {
     fn add_possible_type(&mut self, _ctx: &'a ASTContext, object: &'a str) {
         self.possible_types.push(object);
     }
-    
+
     /// Get list of possible [SchemaObject] types
     #[inline]
     fn get_possible_types(&self) -> Vec<'a, &'a str> {
@@ -806,7 +806,7 @@ where
 }
 
 /// Helper trait to generalize comparisons (see `eq_named_lists`).
-trait Named {
+pub trait Named {
     fn name(&self) -> &str;
 }
 
@@ -825,5 +825,23 @@ impl<'a> Named for &'a SchemaObject<'a> {
 impl<'a> Named for &'a SchemaUnion<'a> {
     fn name(&self) -> &str {
         self.name
+    }
+}
+
+pub fn schema_type_to_type<'arena>(
+    ctx: &'arena ASTContext,
+    schema: &'arena Schema,
+    schema_type: TypeRef<'arena>,
+) -> Type<'arena> {
+    match schema_type {
+        t @ TypeRef::Type(_) => match t.of_type(schema).input_type().expect("input schema type") {
+            InputType::InputObject(SchemaInputObject { name, .. })
+            | InputType::Scalar(SchemaScalar { name, .. })
+            | InputType::Enum(SchemaEnum { name, .. }) => Type::NamedType(NamedType { name }),
+        },
+        TypeRef::ListType(t) => Type::ListType(ctx.alloc(schema_type_to_type(ctx, schema, *t))),
+        TypeRef::NonNullType(t) => {
+            Type::NonNullType(ctx.alloc(schema_type_to_type(ctx, schema, *t)))
+        }
     }
 }

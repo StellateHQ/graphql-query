@@ -32,6 +32,11 @@ impl<'a> SchemaReference<'a> {
         }
     }
 
+    #[inline]
+    pub fn schema(&self) -> &'a Schema<'a> {
+        self.schema
+    }
+
     /// Create a schema reference pointer from a schema and selected fragment type-condition
     #[inline]
     pub fn from_fragment(schema: &'a Schema<'a>, type_condition: &'a str) -> Result<Self> {
@@ -91,7 +96,7 @@ impl<'a> SchemaReference<'a> {
 
     /// Returns a field, if possible, on the current [OutputType].
     #[inline]
-    pub fn get_field(&self, field_name: &'a str) -> Option<&SchemaField<'a>> {
+    pub fn get_field(&self, field_name: &'a str) -> Option<&'a SchemaField<'a>> {
         match self.pointer {
             OutputType::Object(object) => object.get_field(field_name),
             OutputType::Interface(interface) => interface.get_field(field_name),
