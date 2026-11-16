@@ -471,8 +471,9 @@ mod tests {
                 out_fragment: 1,
                 in_variable_definition: 3,
                 out_variable_definition: 3,
-                in_selection_set: 30,
-                out_selection_set: 30,
+                // Leaf fields have no Selection Set and are not counted here
+                in_selection_set: 18,
+                out_selection_set: 18,
                 in_fragment_spread: 1,
                 out_fragment_spread: 1,
                 in_inline_fragment: 3,

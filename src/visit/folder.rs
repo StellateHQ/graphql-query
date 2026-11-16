@@ -618,9 +618,15 @@ impl<'a> private::FoldNode<'a> for Field<'a> {
         let directives = field.directives.fold_with_ctx(info, ctx, folder)?;
         info.path.pop();
 
-        info.path.push(PathSegment::SelectionSet);
-        let selection_set = field.selection_set.fold_with_ctx(info, ctx, folder)?;
-        info.path.pop();
+        let selection_set = match &field.selection_set {
+            Some(selection_set) => {
+                info.path.push(PathSegment::SelectionSet);
+                let selection_set = selection_set.fold_with_ctx(info, ctx, folder)?;
+                info.path.pop();
+                Some(selection_set)
+            }
+            None => None,
+        };
 
         let field = Field {
             alias: field.alias,
@@ -1058,7 +1064,7 @@ mod tests {
                     name: "__typename",
                     arguments: Arguments::default_in(&ctx.arena),
                     directives: Directives::default_in(&ctx.arena),
-                    selection_set: SelectionSet::default_in(&ctx.arena),
+                    selection_set: None,
                 });
 
                 let new_selections =
