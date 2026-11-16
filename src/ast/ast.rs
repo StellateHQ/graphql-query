@@ -366,10 +366,11 @@ pub struct Field<'a> {
     /// A sub-Selection Set that is passed below this field to add selections to this field's
     /// returned GraphQL object type.
     ///
-    /// When no selections are present, this will be an empty
-    /// list, as can be checked using `SelectionSet::is_empty`.
+    /// `None` for a leaf field written without braces, like `id`. `Some` for a field with a
+    /// sub-Selection Set, which may be empty, like `user {}`, since an empty Selection Set is
+    /// valid syntax.
     /// See: [SelectionSet]
-    pub selection_set: SelectionSet<'a>,
+    pub selection_set: Option<SelectionSet<'a>>,
 }
 
 impl<'a> Field<'a> {
@@ -379,10 +380,28 @@ impl<'a> Field<'a> {
         self.alias.unwrap_or(self.name)
     }
 
+    /// Checks whether this Field is a leaf field, written without a sub-Selection Set.
+    ///
+    /// A field with an empty sub-Selection Set, like `user {}`, is not a leaf field.
+    #[inline]
+    pub fn is_leaf(&self) -> bool {
+        self.selection_set.is_none()
+    }
+
+    /// Returns the selections of this Field's sub-Selection Set, or an empty slice for a leaf
+    /// field.
+    #[inline]
+    pub fn selections(&self) -> &[Selection<'a>] {
+        match &self.selection_set {
+            Some(selection_set) => &selection_set.selections,
+            None => &[],
+        }
+    }
+
     /// Creates a new leaf field with the given `name`.
     ///
-    /// All sub-lists, like `arguments`, `directives` and `selection_set` will be created as empty
-    /// defaults.
+    /// The `arguments` and `directives` lists will be created as empty defaults, and the field
+    /// will have no `selection_set`.
     #[inline]
     pub fn new_leaf(ctx: &'a ASTContext, name: &'a str) -> Self {
         Field {
@@ -390,14 +409,14 @@ impl<'a> Field<'a> {
             name,
             arguments: Arguments::default_in(&ctx.arena),
             directives: Directives::default_in(&ctx.arena),
-            selection_set: SelectionSet::default_in(&ctx.arena),
+            selection_set: None,
         }
     }
 
     /// Creates a new leaf field with the given `name` and `alias`.
     ///
-    /// All sub-lists, like `arguments`, `directives` and `selection_set` will be created as empty
-    /// defaults.
+    /// The `arguments` and `directives` lists will be created as empty defaults, and the field
+    /// will have no `selection_set`.
     #[inline]
     pub fn new_aliased_leaf(ctx: &'a ASTContext, alias: &'a str, name: &'a str) -> Self {
         Field {
@@ -406,7 +425,7 @@ impl<'a> Field<'a> {
             name,
             arguments: Arguments::default_in(&ctx.arena),
             directives: Directives::default_in(&ctx.arena),
-            selection_set: SelectionSet::default_in(&ctx.arena),
+            selection_set: None,
         }
     }
 }

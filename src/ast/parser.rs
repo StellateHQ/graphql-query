@@ -325,7 +325,11 @@ impl<'a> private::ParseNode<'a> for Field<'a> {
 
             let arguments = Arguments::new_with_ctx(ctx)?;
             let directives = Directives::new_with_ctx(ctx)?;
-            let selection_set = SelectionSet::new_with_ctx(ctx)?;
+            let selection_set = if let Token::BraceOpen = ctx.peek() {
+                Some(SelectionSet::new_with_ctx(ctx)?)
+            } else {
+                None
+            };
 
             Ok(Field {
                 alias,
@@ -423,13 +427,11 @@ impl<'a> private::ParseNode<'a> for SelectionSet<'a> {
         let selections = if let Token::BraceOpen = ctx.peek() {
             ctx.next();
             let mut builder = Vec::new_in(ctx.arena);
-            loop {
+            // `SelectionSet : { Selection* }`, so a Selection Set may be empty.
+            while !matches!(ctx.peek(), Token::BraceClose) {
                 builder.push(Selection::new_with_ctx(ctx)?);
-                if let Token::BraceClose = ctx.peek() {
-                    ctx.next();
-                    break;
-                }
             }
+            ctx.next();
             builder
         } else {
             Vec::new_in(ctx.arena)
@@ -893,9 +895,7 @@ mod tests {
                 directives: Directives {
                     children: Vec::new_in(&ctx.arena),
                 },
-                selection_set: SelectionSet {
-                    selections: Vec::new_in(&ctx.arena),
-                },
+                selection_set: None,
             },
         );
 
@@ -911,9 +911,7 @@ mod tests {
                 directives: Directives {
                     children: Vec::new_in(&ctx.arena),
                 },
-                selection_set: SelectionSet {
-                    selections: Vec::new_in(&ctx.arena),
-                },
+                selection_set: None,
             },
         );
 
@@ -929,9 +927,7 @@ mod tests {
                 directives: Directives {
                     children: Vec::new_in(&ctx.arena),
                 },
-                selection_set: SelectionSet {
-                    selections: Vec::new_in(&ctx.arena),
-                },
+                selection_set: None,
             },
         );
 
@@ -953,9 +949,7 @@ mod tests {
                 directives: Directives {
                     children: Vec::new_in(&ctx.arena),
                 },
-                selection_set: SelectionSet {
-                    selections: Vec::new_in(&ctx.arena),
-                },
+                selection_set: None,
             },
         );
 
@@ -991,9 +985,7 @@ mod tests {
                         &ctx.arena,
                     ),
                 },
-                selection_set: SelectionSet {
-                    selections: Vec::new_in(&ctx.arena),
-                },
+                selection_set: None,
             },
         );
 
@@ -1029,7 +1021,7 @@ mod tests {
                         &ctx.arena,
                     ),
                 },
-                selection_set: SelectionSet {
+                selection_set: Some(SelectionSet {
                     selections: Vec::from_iter_in(
                         [Selection::Field(Field {
                             alias: None,
@@ -1040,13 +1032,11 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
-                },
+                }),
             },
         );
 
@@ -1062,7 +1052,7 @@ mod tests {
                 directives: Directives {
                     children: Vec::new_in(&ctx.arena),
                 },
-                selection_set: SelectionSet {
+                selection_set: Some(SelectionSet {
                     selections: Vec::from_iter_in(
                         [Selection::Field(Field {
                             alias: None,
@@ -1073,13 +1063,11 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
-                },
+                }),
             },
         );
     }
@@ -1148,9 +1136,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1177,9 +1163,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1220,9 +1204,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1263,9 +1245,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1293,9 +1273,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         }),
                         Selection::InlineFragment(InlineFragment {
                             type_condition: Some(NamedType { name: "Frag" }),
@@ -1313,9 +1291,7 @@ mod tests {
                                         directives: Directives {
                                             children: Vec::new_in(&ctx.arena),
                                         },
-                                        selection_set: SelectionSet {
-                                            selections: Vec::new_in(&ctx.arena),
-                                        },
+                                        selection_set: None,
                                     })],
                                     &ctx.arena,
                                 ),
@@ -1343,9 +1319,7 @@ mod tests {
                                         directives: Directives {
                                             children: Vec::new_in(&ctx.arena),
                                         },
-                                        selection_set: SelectionSet {
-                                            selections: Vec::new_in(&ctx.arena),
-                                        },
+                                        selection_set: None,
                                     })],
                                     &ctx.arena,
                                 ),
@@ -1360,9 +1334,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         }),
                     ],
                     &ctx.arena,
@@ -1549,9 +1521,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1587,9 +1557,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1624,7 +1592,7 @@ mod tests {
                             &ctx.arena,
                         )},
                         directives: Directives { children: Vec::new_in(&ctx.arena )},
-                        selection_set: SelectionSet { selections: Vec::new_in(&ctx.arena )},
+                        selection_set: None,
                     })],
                     &ctx.arena,
                 )},
@@ -1659,9 +1627,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1692,9 +1658,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1725,9 +1689,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1758,9 +1720,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1791,9 +1751,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1834,9 +1792,7 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
@@ -1875,14 +1831,158 @@ mod tests {
                             directives: Directives {
                                 children: Vec::new_in(&ctx.arena),
                             },
-                            selection_set: SelectionSet {
-                                selections: Vec::new_in(&ctx.arena),
-                            },
+                            selection_set: None,
                         })],
                         &ctx.arena,
                     ),
                 },
             },
         );
+    }
+
+    #[test]
+    fn empty_selection_sets() {
+        let ctx = ASTContext::new();
+
+        assert_parse(
+            &ctx,
+            "{}",
+            SelectionSet {
+                selections: Vec::new_in(&ctx.arena),
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "{ }",
+            SelectionSet {
+                selections: Vec::new_in(&ctx.arena),
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "{}",
+            OperationDefinition {
+                operation: OperationKind::Query,
+                name: None,
+                variable_definitions: VariableDefinitions {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                directives: Directives {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                selection_set: SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                },
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "query Name($x: Int) @test {}",
+            OperationDefinition {
+                operation: OperationKind::Query,
+                name: Some(NamedType { name: "Name" }),
+                variable_definitions: VariableDefinitions {
+                    children: Vec::from_iter_in(
+                        [VariableDefinition {
+                            variable: Variable { name: "x" },
+                            of_type: Type::NamedType(NamedType { name: "Int" }),
+                            default_value: Value::Null,
+                            directives: Directives {
+                                children: Vec::new_in(&ctx.arena),
+                            },
+                        }],
+                        &ctx.arena,
+                    ),
+                },
+                directives: Directives {
+                    children: Vec::from_iter_in(
+                        [Directive {
+                            name: "test",
+                            arguments: Arguments {
+                                children: Vec::new_in(&ctx.arena),
+                            },
+                        }],
+                        &ctx.arena,
+                    ),
+                },
+                selection_set: SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                },
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "mutation {}",
+            OperationDefinition {
+                operation: OperationKind::Mutation,
+                name: None,
+                variable_definitions: VariableDefinitions {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                directives: Directives {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                selection_set: SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                },
+            },
+        );
+
+        // A field with an empty Selection Set is distinct from a leaf field
+        assert_parse(
+            &ctx,
+            "parent {}",
+            Field {
+                alias: None,
+                name: "parent",
+                arguments: Arguments {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                directives: Directives {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                selection_set: Some(SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                }),
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "... on Type {}",
+            InlineFragment {
+                type_condition: Some(NamedType { name: "Type" }),
+                directives: Directives {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                selection_set: SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                },
+            },
+        );
+
+        assert_parse(
+            &ctx,
+            "fragment Name on Type {}",
+            FragmentDefinition {
+                name: NamedType { name: "Name" },
+                type_condition: NamedType { name: "Type" },
+                directives: Directives {
+                    children: Vec::new_in(&ctx.arena),
+                },
+                selection_set: SelectionSet {
+                    selections: Vec::new_in(&ctx.arena),
+                },
+            },
+        );
+
+        assert!(Document::parse(&ctx, "{ parent { child {} } }").is_ok());
+        assert!(Document::parse(&ctx, "{").is_err());
+        assert!(Document::parse(&ctx, "{ parent {").is_err());
+        assert!(Document::parse(&ctx, "{ parent { }").is_err());
     }
 }

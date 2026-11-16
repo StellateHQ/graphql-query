@@ -250,7 +250,7 @@ impl<'a> PrintNode for SelectionSet<'a> {
             write_indent(level - 1, buffer)?;
             buffer.write_char('}')
         } else {
-            Ok(())
+            buffer.write_str("{}")
         }
     }
 }
@@ -265,10 +265,11 @@ impl<'a> PrintNode for Field<'a> {
         };
         self.arguments.write_to_buffer(level, buffer)?;
         self.directives.write_to_buffer(level, buffer)?;
-        if !self.selection_set.is_empty() {
+        if let Some(selection_set) = &self.selection_set {
             buffer.write_str(" ")?;
+            selection_set.write_to_buffer(level, buffer)?;
         };
-        self.selection_set.write_to_buffer(level, buffer)
+        Ok(())
     }
 }
 
@@ -675,6 +676,31 @@ mod tests {
         "#,
         );
         assert_eq!(ast.unwrap().print(), "mutation {\n  doThing\n}");
+    }
+
+    #[test]
+    fn empty_selection_sets() {
+        let ctx = ASTContext::new();
+        let ast = OperationDefinition::parse(&ctx, "{}");
+        assert_eq!(ast.unwrap().print(), "{}");
+        let ast = OperationDefinition::parse(&ctx, "query Name ($var: String) { }");
+        assert_eq!(ast.unwrap().print(), "query Name($var: String) {}");
+        let ast = OperationDefinition::parse(&ctx, "mutation {}");
+        assert_eq!(ast.unwrap().print(), "mutation {}");
+        let ast = Field::parse(&ctx, "field {}");
+        assert_eq!(ast.unwrap().print(), "field {}");
+        let ast = Field::parse(&ctx, "field { child {} leaf }");
+        assert_eq!(ast.unwrap().print(), "field {\n  child {}\n  leaf\n}");
+        let ast = InlineFragment::parse(&ctx, "... on Type {}");
+        assert_eq!(ast.unwrap().print(), "... on Type {}");
+        let ast = FragmentDefinition::parse(&ctx, "fragment Test on Type {}");
+        assert_eq!(ast.unwrap().print(), "fragment Test on Type {}");
+
+        // Printed documents parse back to the same AST
+        let query = "{\n  parent {\n    child {}\n    leaf\n  }\n}";
+        let ast = Document::parse(&ctx, query).unwrap();
+        assert_eq!(ast.print(), query);
+        assert_eq!(Document::parse(&ctx, &ast.print()).unwrap(), ast);
     }
 
     #[test]
